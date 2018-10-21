@@ -8,7 +8,9 @@ PART /boot ext3 512M
 PART lvm vg0 500G
 PART lvm cinder-volumes all
 
-LV vg0 root / ext4 100G
-LV vg0 swap swap swap 5G
+LV vg0 root / ext4 50G
+LV vg0 swap swap swap 8G
+LV vg0 var /var ext4 50G
+LV vg0 tmp /tmp ext4 30G
 
 IMAGE {{ hetzner_image }}

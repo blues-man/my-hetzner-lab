@@ -1,0 +1,9 @@
+[all:vars]
+    hetzner_webservice_username: "xxxxxxxxxxxx"
+    hetzner_webservice_password: "xxxxxxxxxxxx"
+    hetzner_image: "/root/.oldroot/nfs/install/../images/CentOS-75-64-minimal.tar.gz"
+    
+    
+
+[all]
+osp.myserver.lab hetzner_hostname: "osp.myserver.lab" hetzner_ip: "188.188.123.234"

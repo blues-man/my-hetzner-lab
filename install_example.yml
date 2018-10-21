@@ -1,0 +1,13 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: install hetzner server
+  hosts: all
+  gather_facts: no
+  remote_user: root
+
+  tasks:
+  - name: provision hetzner root server
+    import_role:
+      name: provision-hetzner
+    tags:
+      - reset
