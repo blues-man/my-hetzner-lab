@@ -1,0 +1,159 @@
+---
+- name: Update ifcfg-{{ hetzner_interface }}
+  copy:
+    dest: "/etc/sysconfig/network-scripts/ifcfg-{{ hetzner_interface }}"
+    backup: yes
+    content: |
+      DEVICE={{ hetzner_interface }}
+      ONBOOT=yes
+      TYPE=OVSPort
+      DEVICETYPE=ovs
+      OVS_BRIDGE=br-ex
+
+- name: Create ifcfg-br-ex
+  copy:
+    dest: /etc/sysconfig/network-scripts/ifcfg-br-ex
+    content: |
+      DEVICE=br-ex
+      BOOTPROTO=none
+      ONBOOT=yes
+      TYPE=OVSBridge
+      DEVICETYPE=ovs
+      USERCTL=yes
+      PEERDNS=yes
+      IPV6INIT=no
+      IPADDR={{ hetzner_ip }}
+      NETMASK=255.255.255.255
+      SCOPE="peer {{ hetzner_default_gw }}"
+
+- name: Copy route-{{ hetzner_interface }} -> route-br-ex
+  copy:
+    remote_src: True
+    src: "/etc/sysconfig/network-scripts/route-{{ hetzner_interface }}"
+    dest: /etc/sysconfig/network-scripts/route-br-ex
+
+- name: Add {{ hetzner_interface }} to br-ex
+  openvswitch_port:
+    bridge: br-ex
+    port: "{{ hetzner_interface }}"
+    state: present
+  register: openvswitch
+
+- name: Restart network service
+  service:
+    name: network
+    state: restarted
+  when: openvswitch.changed == True
+
+- name: Create Openvswitch Bridge (br-ex2)
+  command: ovs-vsctl add-br br-ex2
+  ignore_errors: yes
+
+  # Problem with
+  #   - https://github.com/ansible/ansible/pull/45469
+  #   - https://github.com/ansible/ansible/issues/34185 
+  # openvswitch_bridge:
+  #   bridge: br-ex2
+  #   state: present
+
+- name: Patch bridge br-ex2 to br-ex.
+  command: ovs-vsctl add-port br-ex2 patch2-0
+  ignore_errors: yes
+  # openvswitch_port:
+  #   bridge: br-ex2
+  #   port: patch2-0
+  #   state: present
+
+- name: ovs-vsctl set interface patch2-0 type=patch
+  command: ovs-vsctl set interface patch2-0 type=patch
+  ignore_errors: yes
+  # openvswitch_port:
+  #   bridge: br-ex2
+  #   port: patch2-0
+  #   set: interface patch2-0 type=patch
+
+
+- name: ovs-vsctl set interface patch2-0 options:peer="patch0-2"
+  command: ovs-vsctl set interface patch2-0 options:peer="patch0-2"
+  ignore_errors: yes
+  # openvswitch_port:
+  #   bridge: br-ex2
+  #   port: patch2-0
+  #   set: interface patch2-0 options:peer="patch0-2"
+
+# ovs-vsctl add-port br-ex patch0-2
+- name: Add port (patch0-2) to bridge br-ex
+  command: ovs-vsctl add-port br-ex patch0-2
+  ignore_errors: yes
+  # openvswitch_port:
+  #   bridge: br-ex
+  #   port: patch0-2
+  #   state: present
+
+- name: ovs-vsctl set interface patch0-2 type=patch
+  command: ovs-vsctl set interface patch0-2 type=patch
+  ignore_errors: yes
+  # openvswitch_port:
+  #   bridge: br-ex
+  #   port: patch0-2
+  #   set: interface patch0-2 type=patch
+
+- name: ovs-vsctl set interface patch0-2 options:peer="patch2-0"
+  command: ovs-vsctl set interface patch0-2 options:peer="patch2-0"
+  ignore_errors: yes
+  # openvswitch_port:
+  #   bridge: br-ex
+  #   port: patch0-2
+  #   set:  interface patch0-2 options:peer="patch2-0"
+
+- name: Update neutron openvswitch_agent
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/openvswitch_agent.ini 
+    regexp: '^bridge_mappings='
+    line: 'bridge_mappings=extnet:br-ex,extnet2:br-ex2'
+    backup: yes
+  # register: updateneutron
+
+- name: Create ifcfg-br-ex2
+  copy:
+    dest: /etc/sysconfig/network-scripts/ifcfg-br-ex2
+    content: |
+      DEVICE=br-ex2
+      BOOTPROTO=none
+      ONBOOT=yes
+      TYPE=OVSBridge
+      DEVICETYPE=ovs
+      USERCTL=yes
+      PEERDNS=yes
+      IPADDR={{ hetzner_subnet_first_ip }}
+      NETMASK=255.255.255.248
+      SCOPE="peer {{ hetzner_default_gw }}"
+      IPV6INIT=no
+
+- name: Update iptables #1
+  lineinfile: 
+    path: /etc/sysconfig/iptables
+    regexp: '-A INPUT -j REJECT --reject-with icmp-host-prohibited$'
+    line: '#-A INPUT -j REJECT --reject-with icmp-host-prohibited'
+    backup: yes
+  register: iptablesINPUT
+
+- name: Update iptables #1
+  lineinfile: 
+    path: /etc/sysconfig/iptables
+    regexp: '-A FORWARD -j REJECT --reject-with icmp-host-prohibited$'
+    line: '#-A FORWARD -j REJECT --reject-with icmp-host-prohibited'
+    backup: yes
+  register: iptablesFORWARD
+
+- name: Restart iptables service
+  service:
+    name: iptables
+    state: restarted
+  when: iptablesFORWARD.changed == True or iptablesINPUT.changed == True
+
+- name: Restart network service
+  service:
+    name: network
+    state: restarted
+  when: iptablesFORWARD.changed == True or iptablesINPUT.changed == True

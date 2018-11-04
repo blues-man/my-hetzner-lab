@@ -1,0 +1,27 @@
+---
+- name: restart network
+  service:
+    name: network
+    state: restarted
+
+- name: restart openstack-nova-compute
+  service: 
+    name: openstack-nova-compute
+    state: restarted
+- name: restart openstack-nova-api
+  service: 
+    name: openstack-nova-api
+    state: restarted
+- name: restart openstack-nova-scheduler
+  service: 
+    name: openstack-nova-scheduler
+    state: restarted
+
+- name: restart openstack-cinder-volume
+  service: 
+    name: openstack-cinder-volume
+    state: restarted
+- name: restart openstack-cinder-api
+  service: 
+    name: openstack-cinder-api
+    state: restarted

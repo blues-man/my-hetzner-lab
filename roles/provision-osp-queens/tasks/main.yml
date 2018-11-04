@@ -1,2 +1,35 @@
 ---
-- include: "{{ ansible_os_family }}.yml" 
+# - include: "{{ ansible_os_family }}.yml" 
+# - include: networking.yml
+
+
+- name: Update nova.conf
+  blockinfile:
+    dest: /etc/nova/nova.conf
+    backup: yes
+    insertafter: '\[libvirt\]'
+    block: |
+      images_type = lvm 
+      volume_clear = none
+      images_volume_group = cinder-volumes
+  notify:
+    - restart openstack-nova-compute
+    - restart openstack-nova-api
+    - restart openstack-nova-scheduler
+
+# ToDo: Review!
+- name: Update cinder.conf
+  lineinfile:
+    path: /etc/cinder/cinder.conf
+    regexp: '^#volume_clear = '
+    line: 'volume_clear = none'
+    backup: yes
+  notify:
+    - restart openstack-cinder-volume
+    - restart openstack-cinder-api
+
+
+- name: Ceilometer initialize database
+  command: aodh-dbsync
+  
+
