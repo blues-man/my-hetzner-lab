@@ -71,3 +71,5 @@
 
 - name: Run packstage, take some time
   command: packstack --answer-file /root/answers.txt --timeout=1500
+  args:
+    creates: /root/keystonerc_admin
