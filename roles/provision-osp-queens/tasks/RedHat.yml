@@ -58,7 +58,7 @@
     line: "{{ item.name }}={{ item.value}}"
   with_items:
     - { name: "CONFIG_NTP_SERVERS", value: "0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org" }
-    - { name: "CONFIG_KEYSTONE_ADMIN_PW", value: "redhat" }
+    - { name: "CONFIG_KEYSTONE_ADMIN_PW", value: "{{ openstack_admin_password }}" }
     - { name: "CONFIG_PROVISION_DEMO", value: "n" }
     - { name: "CONFIG_HEAT_INSTALL", value: "y" }
     - { name: "CONFIG_HEAT_CFN_INSTALL", value: "y" }

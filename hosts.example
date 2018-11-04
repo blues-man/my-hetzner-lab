@@ -2,8 +2,13 @@
     hetzner_webservice_username: "xxxxxxxxxxxx"
     hetzner_webservice_password: "xxxxxxxxxxxx"
     hetzner_image: "/root/.oldroot/nfs/install/../images/CentOS-75-64-minimal.tar.gz"
-    
-    
+        
+    subscription_use_username=True
+    rhn_username_or_org_id="xxxx"
+    rhn_password_or_activation_key="xxx"
+    rhn_pool="xxxxx"    
+
+    openstack_admin_password="xxxx"
 
 [all]
 osp.myserver.lab hetzner_hostname: "osp.myserver.lab" hetzner_ip: "188.188.123.234"
