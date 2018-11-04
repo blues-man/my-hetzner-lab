@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Install OpenStack Queens
+  hosts: all
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: provision ocp
+    import_role:
+      name: provision-osp-queens
+    tags:
+      - install-osp-queens

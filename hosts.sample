@@ -1,0 +1,14 @@
+[all:vars]
+hetzner_webservice_username="xxxxxx"
+hetzner_webservice_password=""
+#hetzner_image="/root/.oldroot/nfs/install/../images/CentOS-75-64-minimal.tar.gz"
+hetzner_image=http://RHEL
+
+
+subscription_use_username=True
+rhn_username_or_org_id="xxxx"
+rhn_password_or_activation_key="xxx"
+rhn_pool="xxxxx"
+
+[all]
+osp.mylab.io hetzner_hostname="osp.mylab.io" hetzner_ip="123.123.123.123"
