@@ -73,6 +73,22 @@ Hetzner offers a collection of images which can be set via ``{{ hetzner_image }}
 
 You can alos build a custom image and host it on a public webserver. In that case {{ hetzner_image }} needs to point to that location.
 
+# Install OSP 
+
+## Mac 
+If you don't want to install ansible and all openstack stuff local, use the Dockerfile:
+```
+docker build -t ospbox .
+# If you like you can use -ti instead of -d 
+docker run -d -v $(pwd):/work -v ~/.ssh:/root/.ssh ospbox
+docker exec -ti $CONTAINER-ID bash
+```
+
+## Install Queens
+
+ - Create or hosts file, example ```hosts.sample```
+ - Run playbook : ``` ./install-queens.yml ```
+
 License
 -------
 
