@@ -25,3 +25,9 @@
   service: 
     name: openstack-cinder-api
     state: restarted
+
+- name: restart neutron-dhcp-agent
+  service:
+    name: neutron-dhcp-agent
+    state: restarted
+

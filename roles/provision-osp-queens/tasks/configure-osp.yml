@@ -37,6 +37,43 @@
         project_domain_name: "Default" 
 
 
+- name: "Neutron: set dns_domain"
+  lineinfile:
+    path: /etc/neutron/neutron.conf
+    regexp: 'dns_domain = '
+    line: "dns_domain = {{ openstack_dns_domain }}"
+    backup: yes
+  notify:
+    - restart neutron-dhcp-agent
+
+- name: "Neutron: set extension_drivers"
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    regexp: '^extension_drivers=port_security,qos'
+    line: "extension_drivers=port_security,qos,dns"
+    backup: yes
+  notify:
+    - restart neutron-dhcp-agent
+
+- name: Setup forward DNS Server
+  lineinfile:
+    path: /etc/neutron/dhcp_agent.ini
+    regexp: 'dnsmasq_dns_servers ='
+    line: "dnsmasq_dns_servers = {{ openstack_forward_dns }}"
+    backup: yes
+  notify:
+    - restart neutron-dhcp-agent  
+
+
+- name: Enable forward DNS Server
+  lineinfile:
+    path: /etc/neutron/dhcp_agent.ini
+    regexp: 'dnsmasq_local_resolv ='
+    line: "dnsmasq_local_resolv = true"
+    backup: yes
+  notify:
+    - restart neutron-dhcp-agent  
+
 
 # https://docs.ansible.com/ansible/latest/modules/list_of_cloud_modules.html#openstack
 
@@ -63,7 +100,7 @@
     allocation_pool_start: 10.10.1.100
     allocation_pool_end: 10.10.1.200
     dns_nameservers:
-       - 213.133.98.98
+       - 10.10.1.100
 
 
 - name: Create public network
