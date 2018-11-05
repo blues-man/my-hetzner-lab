@@ -34,5 +34,9 @@
     letsencrypt_email="name@domain.tld"
     letsencrypt_domains="osp.mylab.io"
 
+    # For internal DNS
+    openstack_dns_domain="osp.mylab.io"
+    openstack_forward_dns="213.133.99.99,213.133.98.98,213.133.100.100"
+
 [all]
 osp.myserver.lab hetzner_hostname: "osp.myserver.lab" hetzner_ip: "188.188.123.234" hetzner_interface: "enp4s0" hetzner_default_gw: "188.188.123.230"
