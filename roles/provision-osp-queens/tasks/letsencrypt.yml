@@ -1,0 +1,31 @@
+---
+- name: Clone Certbot into configured directory.
+  git:
+    repo: "https://github.com/letsencrypt/letsencrypt"
+    dest: "/opt/letsencrypt/"
+    version: "master"
+    update: true
+    force: true
+
+- name: Set Certbot script variable.
+  set_fact:
+    certbot_script: "{{ certbot_dir }}/letsencrypt-auto"
+
+- name: Ensure certbot-auto is executable.
+  file:
+    path: "{{ certbot_script }}"
+    mode: 0755
+
+- name: Run letsencrypt-auto
+  command: "{{ certbot_script }} run  --quiet -m {{ letsencrypt_email }}  --agree-tos --apache --domains={{ letsencrypt_domains }}"
+  args:
+    creates: /etc/letsencrypt/options-ssl-apache.conf
+
+- name: Install letsencrypt-auto renew cronjob
+  cron:
+    name: "letsencrypt-auto renew"
+    minute: "55"
+    hour: "7"
+    weekday: 0
+    job: "{{certbot_script}} renew --quiet"
+    

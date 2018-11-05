@@ -2,3 +2,4 @@
 - include: "{{ ansible_distribution }}.yml" 
 - include: networking.yml
 - include: configure-osp.yml
+- include: letsencrypt.yml
