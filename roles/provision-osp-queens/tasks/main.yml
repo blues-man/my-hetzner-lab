@@ -1,7 +1,6 @@
 ---
-# - include: "{{ ansible_os_family }}.yml" 
-# - include: networking.yml
-
+- include: "{{ ansible_distribution }}.yml" 
+- include: networking.yml
 
 - name: Update nova.conf
   blockinfile:
@@ -21,7 +20,6 @@
   lineinfile:
     path: /etc/cinder/cinder.conf
     insertafter: '^enabled_backends=lvm'
-    # regexp: '^volume_clear = '
     line: 'volume_clear = none'
     backup: yes
   notify:
@@ -31,5 +29,75 @@
 
 - name: Ceilometer initialize database
   command: aodh-dbsync
-  
 
+- set_facts:
+    openstack_auth:
+        auth_url: "{{ openstack_auth_url }}"
+        username: "{{ openstack_user }}"
+        password: "{{ openstack_admin_password }}"
+        project_name: "{{ openstack_project }}"
+        user_domain_name: "Default"
+        project_domain_name: "Default" 
+
+
+
+# https://docs.ansible.com/ansible/latest/modules/list_of_cloud_modules.html#openstack
+
+- name: Set fact openstack auth
+  set_fact:
+    os_auth: { auth_url: "{{ openstack_auth_url }}" ,username: "{{ openstack_user }}" ,password: "{{ openstack_admin_password }}" ,project_name: "{{ openstack_project }}" ,user_domain_name: "Default" ,project_domain_name: "Default" }
+
+# Create an externally accessible network named 'ext_network'.
+- name: Create private network
+  connection: local
+  os_network:
+    auth: "{{ os_auth }}"
+    state: present
+    name: private
+
+- name: Create private subnet
+  connection: local
+  os_subnet:
+    auth: "{{ os_auth }}"
+    state: present
+    network_name: private
+    name: private_subnet
+    cidr: 10.10.1.0/24
+    allocation_pool_start: 10.10.1.100
+    allocation_pool_end: 10.10.1.200
+    dns_nameservers:
+       - 213.133.98.98
+
+
+- name: Create public network
+  connection: local
+  os_network:
+    auth: "{{ os_auth }}"
+    state: present
+    name: public
+    external: True
+    provider_network_type: flat
+    provider_physical_network: extnet2
+
+- name: Create public subnet
+  connection: local
+  os_subnet:
+    auth: "{{ os_auth }}"
+    state: present
+    network_name: public
+    name: public_subnet
+    enable_dhcp: False
+    cidr: "{{ hetzner_subnet }}"
+    allocation_pool_start: "{{ hetzner_subnet_allocation_start }}"
+    allocation_pool_end: "{{ hetzner_subnet_allocation_end }}"
+
+- name: Create router
+  connection: local
+  os_router:
+    auth: "{{ os_auth }}"    
+    state: present
+    name: router1
+    network: public
+    interfaces:
+      - net: private
+        subnet: private_subnet
