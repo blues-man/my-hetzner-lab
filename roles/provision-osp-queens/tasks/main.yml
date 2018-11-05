@@ -17,11 +17,11 @@
     - restart openstack-nova-api
     - restart openstack-nova-scheduler
 
-# ToDo: Review!
 - name: Update cinder.conf
   lineinfile:
     path: /etc/cinder/cinder.conf
-    regexp: '^#volume_clear = '
+    insertafter: '^enabled_backends=lvm'
+    # regexp: '^volume_clear = '
     line: 'volume_clear = none'
     backup: yes
   notify:
