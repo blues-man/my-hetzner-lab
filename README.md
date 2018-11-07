@@ -89,6 +89,15 @@ docker exec -ti $CONTAINER-ID bash
  - Create or hosts file, example ```hosts.sample```
  - Run playbook : ``` ./install-queens.yml ```
 
+
+### OpenStack usefull commands 
+
+| Desc | Command |
+|------|---------|
+| List resources     |    ```openstack hypervisor stats show ```     |
+| List server/instances with instance id     | ```openstack server list  -c Name -f value | xargs -n1 openstack server show -f table -c 'name' -c 'OS-EXT-SRV-ATTR:instance_name'```        |
+|      |         |
+
 License
 -------
 
