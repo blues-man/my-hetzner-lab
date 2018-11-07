@@ -27,7 +27,8 @@
 - name: Ceilometer initialize database
   command: aodh-dbsync
 
-- set_facts:
+- name: Set openstack_auth
+  set_fact:
     openstack_auth:
         auth_url: "{{ openstack_auth_url }}"
         username: "{{ openstack_user }}"
