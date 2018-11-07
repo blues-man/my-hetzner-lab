@@ -1,5 +1,33 @@
 ---
-- include: "{{ ansible_distribution }}.yml" 
+
+- name: Packstage gen answer file
+  command: packstack --gen-answer-file /root/answers.txt
+  args:
+    creates: /root/answers.txt
+
+- name: Update answers.txt
+  lineinfile:
+    path: /root/answers.txt
+    regexp: "^{{ item.name }}"
+    line: "{{ item.name }}={{ item.value}}"
+  with_items:
+    - { name: "CONFIG_NTP_SERVERS", value: "0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org" }
+    - { name: "CONFIG_KEYSTONE_ADMIN_PW", value: "{{ openstack_admin_password }}" }
+    - { name: "CONFIG_PROVISION_DEMO", value: "n" }
+    - { name: "CONFIG_HEAT_INSTALL", value: "y" }
+    - { name: "CONFIG_HEAT_CFN_INSTALL", value: "y" }
+    - { name: "CONFIG_CEILOMETER_INSTALL", value: "y" }
+    - { name: "CONFIG_LBAAS_INSTALL", value: "y" }
+    - { name: "CONFIG_CINDER_VOLUMES_CREATE", value: "n" }
+    - { name: "CONFIG_NOVA_SCHED_RAM_ALLOC_RATIO", value: "3.0" }
+    - { name: "CONFIG_NOVA_LIBVIRT_VIRT_TYPE", value: "kvm" }
+    - { name: "CONFIG_HORIZON_SSL", value: "y" }
+
+- name: Run packstage, take some time
+  command: packstack --answer-file /root/answers.txt --timeout=1500
+  args:
+    creates: /root/keystonerc_admin
+
 - include: networking.yml
 - include: configure-osp.yml
 - include: letsencrypt.yml
