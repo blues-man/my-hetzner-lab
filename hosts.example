@@ -1,7 +1,7 @@
 [all:vars]
-    hetzner_webservice_username: "xxxxxxxxxxxx"
-    hetzner_webservice_password: "xxxxxxxxxxxx"
-    hetzner_image: "/root/.oldroot/nfs/install/../images/CentOS-75-64-minimal.tar.gz"
+    hetzner_webservice_username="xxxxxxxxxxxx"
+    hetzner_webservice_password="xxxxxxxxxxxx"
+    hetzner_image="/root/.oldroot/nfs/install/../images/CentOS-75-64-minimal.tar.gz"
         
     subscription_use_username=True
     rhn_username_or_org_id="xxxx"
@@ -39,4 +39,4 @@
     openstack_forward_dns="213.133.99.99,213.133.98.98,213.133.100.100"
 
 [all]
-osp.myserver.lab hetzner_hostname: "osp.myserver.lab" hetzner_ip: "188.188.123.234" hetzner_interface: "enp4s0" hetzner_default_gw: "188.188.123.230"
+osp.myserver.lab hetzner_hostname="osp.myserver.lab" hetzner_ip="188.188.123.234" hetzner_interface="enp4s0" hetzner_default_gw="188.188.123.230"

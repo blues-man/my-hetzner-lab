@@ -1,5 +1,5 @@
 - name: provision hetzner root server
-  hosts: hetzner
+  hosts: all
   gather_facts: no
   remote_user: root
 
