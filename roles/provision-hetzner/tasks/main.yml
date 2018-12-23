@@ -1,7 +1,4 @@
 ---
-- name: Set ansible variables
-  include_vars: vars/main.yml
-
 - name: Retrieve first public key fingerprint 
   uri:
     url: https://robot-ws.your-server.de/key
