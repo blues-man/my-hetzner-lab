@@ -73,7 +73,7 @@ Hetzner offers a collection of images which can be set via ``{{ hetzner_image }}
 
 You can alos build a custom image and host it on a public webserver. In that case {{ hetzner_image }} needs to point to that location.
 
-# Install OSP 
+# Install OpenStack
 
  - Create or hosts file, example ```hosts.sample```
  - Prepare hetzner server: ``` ./prepare-queens.yml```
@@ -81,6 +81,18 @@ You can alos build a custom image and host it on a public webserver. In that cas
      - *because wo do a lot of network configuration, at one point your ssh connection get lost!
  - And now, final reboot your hetzner box
 
+# Install OpenShift
+
+Required:
+ - DNS at cloudflare, if you like you can remote the certificate stuff
+
+Installation
+ - Create or hosts file, example ```hosts.openshift.sample```
+ - Request certificates: ``` ./letsencrypt_with_cloudflare.yml ```
+ - Install OpenShift: Connect to your host and run
+    - ``` cd ~/ansible/ ```
+    - ``` ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml ```
+    - ``` ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml ```
 
 ## Usefull OpenStack commands 
 

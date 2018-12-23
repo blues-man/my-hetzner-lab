@@ -1,0 +1,36 @@
+---
+
+- name: Red Hat Subscription
+  import_role:
+    name: redhat_subscription
+  tags:
+    - redhat_subscription
+
+- name: Install packages
+  yum:
+    name: 
+      - wget 
+      - git
+      - net-tools
+      - bind-utils
+      - yum-utils
+      - iptables-services
+      - bridge-utils
+      - bash-completion
+      - kexec-tools
+      - sos
+      - psacct
+      - tmux
+      - vim
+      - openshift-ansible
+      - docker
+    state: present
+
+- name: Docker storage setup
+  template:
+    src: templates/docker-storage-setup.j2
+    dest: /etc/sysconfig/docker-storage-setup
+
+- name: Run docker storager setup
+  command: docker-storage-setup
+

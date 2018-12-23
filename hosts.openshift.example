@@ -1,0 +1,30 @@
+[all:vars]
+
+ansible_python_interpreter="/usr/bin/env python" 
+
+hetzner_webservice_username="xxx"
+hetzner_webservice_password="xxx"
+#hetzner_image="/root/.oldroot/nfs/install/../images/CentOS-75-64-minimal.tar.gz"
+
+hetzner_autosetup_file="{{ playbook_dir }}/my-autosetup-for-openshift"
+
+cloudflare_account_email=xxx
+cloudflare_account_api_token=xxx
+
+subscription_use_username=True
+#rhn_username_or_org_id="xxx"
+#rhn_password_or_activation_key="xxx"
+rhn_username_or_org_id="xxx"
+rhn_password_or_activation_key="xxx"
+rhn_pool="xxx"
+
+rh_oreg_auth_user="xxx"
+rh_oreg_auth_password=xxx
+
+public_hostname="xxx"
+
+admin_user=admin
+admin_password_md5="xxx"
+
+[all]
+q.bohne.io hetzner_hostname="q" hetzner_ip="95.216.78.18" 

@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Prepare host for openstack openshift
+  hosts: all
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: prepare
+    import_role:
+      name: prepare-openshift
+    tags:
+      - prepare-osp-openshift
