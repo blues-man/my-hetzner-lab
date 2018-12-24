@@ -126,7 +126,7 @@
       USERCTL=yes
       PEERDNS=yes
       IPADDR={{ hetzner_subnet_first_ip }}
-      NETMASK=255.255.255.248
+      NETMASK={{ hetzner_subnet_mask }}
       SCOPE="peer {{ hetzner_default_gw }}"
       IPV6INIT=no
 

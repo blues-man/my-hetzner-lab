@@ -88,20 +88,20 @@
   os_network:
     auth: "{{ os_auth }}"
     state: present
-    name: private
+    name: admin
 
 - name: Create private subnet
   connection: local
   os_subnet:
     auth: "{{ os_auth }}"
     state: present
-    network_name: private
-    name: private_subnet
-    cidr: 10.10.1.0/24
-    allocation_pool_start: 10.10.1.100
-    allocation_pool_end: 10.10.1.200
+    network_name: admin
+    name: admin_subnet
+    cidr: 192.168.1.0/24
+    allocation_pool_start: 192.168.1.100
+    allocation_pool_end: 192.168.1.200
     dns_nameservers:
-       - 10.10.1.100
+       - 213.133.98.98
 
 
 - name: Create public network
@@ -131,8 +131,8 @@
   os_router:
     auth: "{{ os_auth }}"    
     state: present
-    name: router1
+    name: admin_router
     network: public
     interfaces:
-      - net: private
-        subnet: private_subnet
+      - net: admin 
+        subnet: admin_subnet
