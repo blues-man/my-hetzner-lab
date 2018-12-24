@@ -27,9 +27,14 @@
     # Hosts/Net: 6                     Class B
 
     hetzner_subnet = "176.9.205.200/29"
+    hetzner_subnet_mask="255.255.255.248"
     hetzner_subnet_first_ip="176.9.205.201"
     hetzner_subnet_allocation_start="176.9.205.202"
     hetzner_subnet_allocation_end="176.9.205.206"
+    hetzner_hostname="osp.myserver.lab"
+    hetzner_ip="188.188.123.234"
+    hetzner_interface="enp4s0"
+    hetzner_default_gw="188.188.123.230"
 
     letsencrypt_email="name@domain.tld"
     letsencrypt_domains="osp.mylab.io"
@@ -39,4 +44,4 @@
     openstack_forward_dns="213.133.99.99,213.133.98.98,213.133.100.100"
 
 [all]
-osp.myserver.lab hetzner_hostname="osp.myserver.lab" hetzner_ip="188.188.123.234" hetzner_interface="enp4s0" hetzner_default_gw="188.188.123.230"
+osp.myserver.lab

@@ -1,7 +1,7 @@
 #!/usr/bin/env ansible-playbook
 ---
 - name: Install OpenStack Queens
-  hosts: all
+  hosts: localhost
   gather_facts: yes
   remote_user: root
   tasks:
