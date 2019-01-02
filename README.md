@@ -93,6 +93,30 @@ Installation
     - ``` cd ~/ansible/ ```
     - ``` ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml ```
     - ``` ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml ```
+ - Install Kubevirt - [OpenShift Blog](https://blog.openshift.com/getting-started-with-kubevirt/)
+    ```
+    # add permissions if using OpenShift
+    oc adm policy add-scc-to-user privileged -n kube-system -z kubevirt-privileged
+    oc adm policy add-scc-to-user privileged -n kube-system -z kubevirt-controller
+    oc adm policy add-scc-to-user privileged -n kube-system -z kubevirt-apiserver
+    # apply the KubeVirt configuration, adjust RELEASE for the current version
+    RELEASE=v0.11.0
+    kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/kubevirt.yaml
+    curl -O -L https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/virtctl-${RELEASE}-linux-amd64
+    sudo mv virtctl-${RELEASE}-linux-amd64 /usr/local/bin/virtctl
+    sudo chmod +x /usr/local/bin/virtctl
+    ```
+ - Deploy Kubevirt Web-UI
+    - [Start Operator](https://github.com/kubevirt/web-ui-operator#variant-1-the-openshift-console-is-installed)
+    - [Start WebUI Instance](https://github.com/kubevirt/web-ui-operator#fire-web-ui-deployment)
+
+ - Deploy [containerized-data-importer](https://github.com/kubevirt/containerized-data-importer)
+    ```
+    oc project kube-system
+    oc adm policy add-scc-to-user privileged -z cdi-sa
+    VERSION=v1.4.1
+    kubectl create -f https://github.com/kubevirt/containerized-data-importer/releases/download/$VERSION/cdi-controller.yaml
+    ```
 
 ## Usefull OpenStack commands 
 
