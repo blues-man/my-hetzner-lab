@@ -75,25 +75,52 @@ You can alos build a custom image and host it on a public webserver. In that cas
 
 # Install OpenStack
 
- - Create or hosts file, example ```hosts.sample```
- - Prepare hetzner server: ``` ./prepare-queens.yml```
- - Run playbook within tmux* ON the hetzer box : ``` ./install-queens.yml ```
-     - *because wo do a lot of network configuration, at one point your ssh connection get lost!
- - And now, final reboot your hetzner box
+ 1) Create or hosts file, example ```hosts.sample```
+ 2) Basis os Installation: 
+      ```
+      ./01_install_os.yml
+      ```
+ 3) Prepare hetzner server: 
+      ``` 
+      ./02_prepare-openstack.yml.yml
+      ```
+ 4) Run openstack installation within tmux* **ON the hetzer 
+ box** : 
+      
+      *because wo do a lot of network configuration, at one point your ssh connection get lost!
+     ``` 
+     ./03_install-openstack.yml
+     ```
+ 5) And now, final reboot your hetzner box
 
 # Install OpenShift
 
-Required:
+Requirements:
  - DNS at [Cloudflare](https://www.cloudflare.com/), if you like you can remove the certificate stuff
 
 Installation
- - Create or hosts file, example ```hosts.openshift.sample```
- - Request certificates: ``` ./letsencrypt_with_cloudflare.yml ```
- - Install OpenShift: Connect to your host and run
-    - ``` cd ~/ansible/ ```
-    - ``` ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml ```
-    - ``` ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml ```
- - Install Kubevirt - [OpenShift Blog](https://blog.openshift.com/getting-started-with-kubevirt/)
+ 1) Create or hosts file, example ```hosts.openshift.sample```
+ 2) Request certificates: 
+      ```
+      ./00_letsencrypt_with_cloudflare.yml
+      ```
+ 3) Basis os Installation: 
+      ```
+      ./01_install_os.yml
+      ```
+ 4) Prepare OpenShift installation:   
+      ```
+      ./02_prepare-openshift.yml
+      ```
+ 5) Install OpenShift: **Connect to your host and run**
+    ``` 
+    cd ~/ansible/ 
+    ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
+    ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml
+    867453
+    448665
+    ```
+ 6) *Optional*: Install Kubevirt - [OpenShift Blog](https://blog.openshift.com/getting-started-with-kubevirt/)
     ```
     # add permissions if using OpenShift
     oc adm policy add-scc-to-user privileged -n kube-system -z kubevirt-privileged
@@ -106,11 +133,11 @@ Installation
     sudo mv virtctl-${RELEASE}-linux-amd64 /usr/local/bin/virtctl
     sudo chmod +x /usr/local/bin/virtctl
     ```
- - Deploy Kubevirt Web-UI
+ 7) *Optional*: Deploy Kubevirt Web-UI
     - [Start Operator](https://github.com/kubevirt/web-ui-operator#variant-1-the-openshift-console-is-installed)
     - [Start WebUI Instance](https://github.com/kubevirt/web-ui-operator#fire-web-ui-deployment)
 
- - Deploy [containerized-data-importer](https://github.com/kubevirt/containerized-data-importer)
+ 8) *Optional*: Deploy [containerized-data-importer](https://github.com/kubevirt/containerized-data-importer)
     ```
     oc project kube-system
     oc adm policy add-scc-to-user privileged -z cdi-sa
