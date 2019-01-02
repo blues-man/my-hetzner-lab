@@ -84,7 +84,7 @@ You can alos build a custom image and host it on a public webserver. In that cas
 # Install OpenShift
 
 Required:
- - DNS at cloudflare, if you like you can remote the certificate stuff
+ - DNS at [Cloudflare](https://www.cloudflare.com/), if you like you can remove the certificate stuff
 
 Installation
  - Create or hosts file, example ```hosts.openshift.sample```
@@ -123,7 +123,7 @@ Installation
 | Desc | Command |
 |------|---------|
 | List resources     |    ```openstack hypervisor stats show ```     |
-| List server/instances with instance id     | ```openstack server list  -c Name -f value | xargs -n1 openstack server show -f table -c 'name' -c 'OS-EXT-SRV-ATTR:instance_name'```        |
+| List server/instances with instance id     | ```openstack server list  -c Name -f value \| xargs -n1 openstack server show -f table -c 'name' -c 'OS-EXT-SRV-ATTR:instance_name'```        |
 |      |         |
 
 License
