@@ -1,4 +1,6 @@
-# ansible-hetzner
+# My Hetzner lab
+
+Based on https://github.com/andyneeb/ansible-hetzner - Thanks!
 
 Notes
 -----
