@@ -101,7 +101,7 @@
     allocation_pool_start: 192.168.1.100
     allocation_pool_end: 192.168.1.200
     dns_nameservers:
-       - 213.133.98.98
+       - 192.168.1.100
 
 
 - name: Create public network
