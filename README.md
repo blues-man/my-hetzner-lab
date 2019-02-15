@@ -101,7 +101,7 @@ Requirements:
  - DNS at [Cloudflare](https://www.cloudflare.com/), if you like you can remove the certificate stuff
 
 Installation
- 1) Create or hosts file, example ```hosts.openshift.sample```
+ 1) Create or hosts file, example ```hosts.openshift.example```
  2) Request certificates: 
       ```
       ./00_letsencrypt_with_cloudflare.yml
