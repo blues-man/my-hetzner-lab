@@ -6,38 +6,38 @@
   tasks:
   - name: Create certificates dir
     file:
-      path: "{{ playbook_dir }}/certificates"
+      path: "{{ playbook_dir }}/certificates/{{ public_hostname }}"
       state: directory
       mode: 0755
 
   - name: Create account-key
     openssl_privatekey:
-      path: "{{ playbook_dir }}/certificates/{{ public_hostname }}-account.key"
+      path: "{{ playbook_dir }}/certificates/account.key"
       type: RSA
       size: 4096
 
   - name: Create {{ public_hostname }}.key
     openssl_privatekey:
-      path: "{{ playbook_dir }}/certificates/{{ public_hostname }}.key"
+      path: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.key"
       type: RSA
       size: 4096
 
  # Generate an OpenSSL Certificate Signing Request with subjectAltName extension
   - openssl_csr:
-      path: "{{ playbook_dir }}/certificates/{{ public_hostname }}.csr"
-      privatekey_path: "{{ playbook_dir }}/certificates/{{ public_hostname }}.key"
+      path: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.csr"
+      privatekey_path: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.key"
       subject_alt_name: "DNS:*.{{ public_hostname }},DNS:{{ public_hostname }}"
 
   - name: Create a challenge for {{ public_hostname }} using a account key file.
     acme_certificate:
-      account_key_src: "{{ playbook_dir }}/certificates/{{ public_hostname }}-account.key"
+      account_key_src: "{{ playbook_dir }}/certificates/account.key"
       account_email: "{{ cloudflare_account_email }}"
-      src: "{{ playbook_dir }}/certificates/{{ public_hostname }}.csr"
-      cert: "{{ playbook_dir }}/certificates/{{ public_hostname }}.crt"
+      src: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.csr"
+      cert: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.crt"
       challenge: dns-01
       acme_directory: https://acme-v02.api.letsencrypt.org/directory
       acme_version: 2
-      # acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+      #acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
       # Renew if the certificate is at least 30 days old
       remaining_days: 60
       terms_agreed: yes
@@ -74,15 +74,15 @@
 
   - name: Let the challenge be validated and retrieve the cert and intermediate certificate
     acme_certificate:
-      account_key_src: "{{ playbook_dir }}/certificates/{{ public_hostname }}-account.key"
+      account_key_src: "{{ playbook_dir }}/certificates/account.key"
       account_email: "{{ cloudflare_account_email }}"
-      src: "{{ playbook_dir }}/certificates/{{ public_hostname }}.csr"
-      cert: "{{ playbook_dir }}/certificates/{{ public_hostname }}.crt"
-      fullchain: "{{ playbook_dir }}/certificates/{{ public_hostname }}-fullchain.crt"
-      chain: "{{ playbook_dir }}/certificates/{{ public_hostname }}-intermediate.crt"
+      src: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.csr"
+      cert: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.crt"
+      fullchain: "{{ playbook_dir }}/certificates/{{ public_hostname }}/fullchain.crt"
+      chain: "{{ playbook_dir }}/certificates/{{ public_hostname }}/intermediate.crt"
       challenge: dns-01
       acme_version: 2
-      # acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+      #acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
       acme_directory: https://acme-v02.api.letsencrypt.org/directory
       remaining_days: 60
       data: "{{ sample_com_challenge }}"
@@ -102,6 +102,6 @@
     when: sample_com_challenge is changed 
 
   - name: concat root ca and intermediate
-    shell: "cat {{ playbook_dir }}/certificates/isrgrootx1.pem {{ playbook_dir }}/certificates/{{ public_hostname }}-intermediate.crt >> {{ playbook_dir }}/certificates/ca-bundle.pem"
+    shell: "cat {{ playbook_dir }}/certificates/isrgrootx1.pem {{ playbook_dir }}/certificates/{{ public_hostname }}/intermediate.crt >> {{ playbook_dir }}/certificates/{{ public_hostname }}/ca-bundle.pem"
     args:
-      creates: "{{ playbook_dir }}/certificates/ca-bundle.pem"
+      creates: "{{ playbook_dir }}/certificates/{{ public_hostname }}/ca-bundle.pem"
