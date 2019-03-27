@@ -3,7 +3,20 @@
 - hosts: localhost
   gather_facts: false
   connection: local
+  vars:
+    cloudflare_account_email: "{{ cloudflare_account_email | default(lookup('env','CLOUDFLARE_ACCOUNT_EMAIL')) }}"
+    cloudflare_account_api_token: "{{ cloudflare_account_email | default(lookup('env','CLOUDFLARE_ACCOUNT_API_TOKEN')) }}"
+
   tasks:
+  - name: Check CloudFlare
+    assert:
+      that:
+        - item is defined
+      msg: "{{ item }} is not defined!"
+    with_items:
+      - cloudflare_account_email
+      - cloudflare_account_api_token
+
   - name: Create certificates dir
     file:
       path: "{{ playbook_dir }}/certificates/{{ public_hostname }}"
@@ -26,7 +39,7 @@
   - openssl_csr:
       path: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.csr"
       privatekey_path: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.key"
-      subject_alt_name: "DNS:*.{{ public_hostname }},DNS:{{ public_hostname }}"
+      subject_alt_name: "DNS:*.{{ public_hostname }},DNS:{{ public_hostname }},DNS:api-{{public_hostname}}"
 
   - name: Create a challenge for {{ public_hostname }} using a account key file.
     acme_certificate:
