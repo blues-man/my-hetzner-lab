@@ -75,27 +75,32 @@ Hetzner offers a collection of images which can be set via ``{{ hetzner_image }}
 
 You can alos build a custom image and host it on a public webserver. In that case {{ hetzner_image }} needs to point to that location.
 
-# Install OpenStack
+# Install Red Hat OpenStack 14 - Rocky
 
  1) Create or hosts file, example ```hosts.sample```
+ 2) *Optional*
+    Create certificates with 
+    ```
+    ./00_letsencrypt_with_cloudflare.yml -i hosts
+    ```
  2) Basis os Installation: 
       ```
-      ./01_install_os.yml
+      ./01_install_os.yml -i hosts
       ```
  3) Prepare hetzner server: 
       ``` 
-      ./02_prepare-openstack.yml.yml
+      ./02_prepare-openstack-14.yml -i hosts
       ```
  4) Run openstack installation within tmux* **ON the hetzer 
  box** : 
       
       *because wo do a lot of network configuration, at one point your ssh connection get lost!
      ``` 
-     ./03_install-openstack.yml
+     ./03_install-openstack-14.yml -i hosts
      ```
  5) And now, final reboot your hetzner box
 
-# Install OpenShift
+# Install OpenShift on BareMetal
 
 Requirements:
  - DNS at [Cloudflare](https://www.cloudflare.com/), if you like you can remove the certificate stuff

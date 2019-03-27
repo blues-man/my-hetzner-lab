@@ -1,0 +1,35 @@
+[all:vars]
+
+
+openstack_admin_password="{{ openstack_admin_password }}"
+# For internal DNS
+openstack_dns_domain="{{ openstack_dns_domain }}"
+openstack_forward_dns="{{ openstack_forward_dns }}"
+
+
+openstack_auth_url="{{ openstack_auth_url }}"
+openstack_user="{{ openstack_user }}"
+openstack_project="{{ openstack_project }}"
+
+public_hostname="{{ public_hostname }}"
+
+# ipcalc 176.9.205.200/29
+# Address:   176.9.205.200        10110000.00001001.11001101.11001 000
+# Netmask:   255.255.255.248 = 29 11111111.11111111.11111111.11111 000
+# Wildcard:  0.0.0.7              00000000.00000000.00000000.00000 111
+# =>
+# Network:   176.9.205.200/29     10110000.00001001.11001101.11001 000
+# HostMin:   176.9.205.201        10110000.00001001.11001101.11001 001
+# HostMax:   176.9.205.206        10110000.00001001.11001101.11001 110
+# Broadcast: 176.9.205.207        10110000.00001001.11001101.11001 111
+# Hosts/Net: 6                     Class B
+
+hetzner_subnet = "{{hetzner_subnet}}"
+hetzner_subnet_mask = "{{ hetzner_subnet_mask }}"
+hetzner_subnet_first_ip="{{ hetzner_subnet_first_ip }}"
+hetzner_subnet_allocation_start="{{ hetzner_subnet_allocation_start }}"
+hetzner_subnet_allocation_end="{{hetzner_subnet_allocation_end }}"
+
+
+[all]
+localhost ansible_connection=local hetzner_hostname="{{ hetzner_hostname }}" hetzner_ip="{{ hetzner_ip  }}" hetzner_interface="{{ hetzner_interface }}" hetzner_default_gw="{{ hetzner_default_gw }}"

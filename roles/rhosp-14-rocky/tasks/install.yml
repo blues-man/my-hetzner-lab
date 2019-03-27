@@ -1,0 +1,71 @@
+---
+
+- name: Packstage gen answer file
+  command: packstack --gen-answer-file /root/answers.txt
+  args:
+    creates: /root/answers.txt
+
+- name: Update answers.txt
+  lineinfile:
+    path: /root/answers.txt
+    regexp: "^{{ item.name }}="
+    line: "{{ item.name }}={{ item.value}}"
+  with_items:
+    - { name: "CONFIG_NTP_SERVERS", value: "0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org" }
+    - { name: "CONFIG_KEYSTONE_ADMIN_PW", value: "{{ openstack_admin_password }}" }
+    - { name: "CONFIG_PROVISION_DEMO", value: "n" }
+    - { name: "CONFIG_HEAT_INSTALL", value: "y" }
+    - { name: "CONFIG_HEAT_CFN_INSTALL", value: "y" }
+    - { name: "CONFIG_CEILOMETER_INSTALL", value: "y" }
+    - { name: "CONFIG_LBAAS_INSTALL", value: "y" }
+    - { name: "CONFIG_CINDER_VOLUMES_CREATE", value: "n" }
+    - { name: "CONFIG_NOVA_SCHED_RAM_ALLOC_RATIO", value: "3.0" }
+    - { name: "CONFIG_NOVA_LIBVIRT_VIRT_TYPE", value: "kvm" }
+    - { name: "CONFIG_HORIZON_SSL", value: "y" }
+
+- name: Check that the somefile.conf exists
+  stat:
+    path: "/root/ansible/certificates/{{ public_hostname }}/cert.crt"
+  register: stat_result
+
+- name: Create /etc/ssl/{{ public_hostname }}
+  file:
+    path: "/etc/ssl/{{ public_hostname }}"
+    state: directory
+    mode: 0755
+  when: stat_result.stat.exists == True
+
+- name: Copy certificates
+  copy:
+    src: "/root/ansible/certificates/{{ public_hostname }}/{{ item }}"
+    dest: "/etc/ssl/{{ public_hostname }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0444
+    backup: yes
+  with_items:
+    - cert.crt
+    - cert.key
+    - ca-bundle.pem
+  when: stat_result.stat.exists == True
+
+- name: Update set SSL stuff answers.txt
+  lineinfile:
+    path: /root/answers.txt
+    regexp: "^{{ item.name }}"
+    line: "{{ item.name }}={{ item.value}}"
+  with_items:
+    - { name: "CONFIG_HORIZON_SSL_CERT", value: "/etc/ssl/{{ public_hostname }}/cert.crt" }
+    - { name: "CONFIG_HORIZON_SSL_KEY", value: "/etc/ssl/{{ public_hostname }}/cert.key" }
+    - { name: "CONFIG_HORIZON_SSL_CACERT", value: "/etc/ssl/{{ public_hostname }}/ca-bundle.pem" }
+    - { name: "CONFIG_VNC_SSL_CERT", value: "/etc/ssl/{{ public_hostname }}/cert.crt" }
+    - { name: "CONFIG_VNC_SSL_KEY", value: "/etc/ssl/{{ public_hostname }}/cert.key" }
+  when: stat_result.stat.exists == True
+
+- name: Run packstage, take some time
+  command: packstack --answer-file /root/answers.txt --timeout=1500
+  args:
+    creates: /root/keystonerc_admin
+
+- include: install-networking.yml
+- include: configure-osp.yml

@@ -1,0 +1,38 @@
+---
+- include: "prepare-{{ ansible_distribution }}.yml" 
+
+- name: Update all packages
+  yum:
+    name: "*"
+    state: latest
+
+- name: Update grub config
+  lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX='
+    line: 'GRUB_CMDLINE_LINUX="biosdevname=0 crashkernel=auto nomodeset rd.auto=1 consoleblank=0 intel_iommu=on"'
+    backup: yes
+  register: updategrub
+
+- name: Update grub
+  command: grub2-mkconfig -o /boot/grub2/grub.cfg
+  when: updategrub.changed == True
+
+- name: Creates directory
+  file:
+    path: ~/ansible/
+    state: directory
+
+- name: Synchronization playboks
+  synchronize:
+    src: "{{inventory_dir}}/"
+    dest: ~/ansible/
+
+- name: Create inventory
+  template:
+    src: templates/inventory.j2
+    dest: ~/ansible/hosts
+
+- name: Reboot ....
+  reboot:
+  when: updategrub.changed == True

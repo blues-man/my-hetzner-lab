@@ -1,0 +1,30 @@
+---
+
+- name: Red Hat Subscription
+  import_role:
+    name: redhat_subscription
+  tags:
+    - redhat_subscription
+
+- name: Install packages
+  yum:
+    name: 
+      - openstack-packstack
+      - python-setuptools
+      - yum-utils
+      - tmux
+      - vim
+      - rsync
+      - ansible
+      - python2-shade
+    state: present
+
+- name: Make sure a service is running
+  systemd:
+    enabled: no
+    state: stopped
+    name: "{{ item }}"
+  with_items:
+    - firewalld
+    - NetworkManager
+  

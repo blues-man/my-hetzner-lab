@@ -1,0 +1,9 @@
+---
+repos:
+  - rhel-7-server-rpms 
+  - rhel-7-server-rh-common-rpms
+  - rhel-7-server-extras-rpms
+  - rhel-7-server-openstack-14-rpms
+  - rhel-7-server-openstack-14-devtools-rpms
+# Ansible 2.5, because with ansible 2.6 we got problems with openstack sdk
+  - rhel-7-server-ansible-2.6-rpms

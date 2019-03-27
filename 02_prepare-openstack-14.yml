@@ -1,0 +1,13 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Prepare host for openstack queens
+  hosts: all
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: prepare
+    import_role:
+      name: rhosp-14-rocky
+      tasks_from: prepare.yml
+    tags:
+      - prepare-osp-queens

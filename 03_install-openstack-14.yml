@@ -1,0 +1,11 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Install OpenStack Queens
+  hosts: localhost
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: provision ocp
+    import_role:
+      name: rhosp-14-rocky
+      tasks_from: install.yml
