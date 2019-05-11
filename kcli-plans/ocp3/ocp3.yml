@@ -1,0 +1,129 @@
+parameters:
+ rh_oreg_auth_user:
+ rh_oreg_auth_password: 
+ prefix: ocp3
+ template: rhel-server-7.6-x86_64-kvm.qcow2
+ base_disk_size: 60
+ container_disk_size: 50
+ container_disk: vdb
+ glusterfs_disk_size: 100
+ glusterfs_disk: vdc
+ master_memory: 8192
+ infra_memory: 8192
+ node_memory: 8192
+ domain: a.bohne.io
+ pool: default
+ masters: 1
+ infras: 2
+ nodes: 4
+ registry: registry.redhat.io
+ crio: false
+ asb: true
+ metrics: false
+ glusterfs: true
+ version: '3.11'
+ deploy: false
+ notifycmd: "tail -10 /var/log/ansible.log"
+
+
+{{ prefix }}:
+ type: network
+ cidr: 10.99.3.0/24
+ dhcp: True
+ nat: true
+
+
+{% for master in range(0, masters) %}
+{{ prefix }}-m0{{ master + 1 }}:
+ template: {{ template }}
+ numcpus: 2
+ memory: {{ master_memory }}
+ rhnregister: true
+ reservedns: true
+ sharedkey: true
+ domain: {{ domain }}
+ nets:
+  - name: {{ prefix }}
+    ip: 10.99.3.3{{ master }}
+    mask: 255.255.255.0
+    gateway: 10.99.3.1
+    dns: 10.99.3.1
+ disks:
+  - size: {{ base_disk_size }}
+  - size: {{ container_disk_size }}
+  - size: {{ glusterfs_disk_size }}
+ pool: {{ pool }}
+ files:
+  - path: /root/inventory
+    origin: {{ prefix }}-inventory
+  - path: /root/ca-bundle.pem
+    origin: certificates/ca-bundle.pem
+  - path: /root/cert.crt
+    origin: certificates/cert.crt
+  - path: /root/cert.key
+    origin: certificates/cert.key
+{% if type == 'ovirt' %}
+  - path: /root/ovirt_fix_inventory.sh
+    origin: scripts/ovirt_fix_inventory.sh
+{% endif %}
+  - path: /root/install_openshift.sh
+    origin: scripts/install_openshift.sh
+ scripts: 
+  - scripts/subscription.sh
+  - scripts/pre.sh
+{% if deploy and master == 0 %}
+  - scripts/install.sh
+ notify: true
+ notifycmd: {{ notifycmd }}
+{% endif %}
+{% endfor %}
+
+{% for node in range(0, nodes) %}
+{{ prefix }}-n0{{ node + 1 }}:
+ template: {{ template }}
+ numcpus: 2
+ memory: {{ node_memory }}
+ rhnregister: true
+ reservedns: true
+ sharedkey: true
+ domain: {{ domain }}
+ nets:
+  - name: {{ prefix }}
+    ip: 10.99.3.4{{ node }}
+    mask: 255.255.255.0
+    gateway: 10.99.3.1
+    dns: 10.99.3.1
+ disks:
+  - size: {{ base_disk_size }}
+  - size: {{ container_disk_size }}
+  - size: {{ glusterfs_disk_size }}
+ pool: {{ pool }}
+ scripts: 
+  - scripts/subscription.sh
+  - scripts/pre.sh
+{% endfor %}
+
+{% for infra in range(0, infras) %}
+{{ prefix }}-i0{{ infra + 1 }}:
+ template: {{ template }}
+ numcpus: 2
+ memory: {{ infra_memory }}
+ rhnregister: true
+ reservedns: true
+ sharedkey: true
+ domain: {{ domain }}
+ nets:
+  - name: {{ prefix }}
+    ip: 10.99.3.5{{ infra }}
+    mask: 255.255.255.0
+    gateway: 10.99.3.1
+    dns: 10.99.3.1
+ disks:
+  - size: {{ base_disk_size }}
+  - size: {{ container_disk_size }}
+  - size: {{ glusterfs_disk_size }}
+ pool: {{ pool }}
+ scripts: 
+  - scripts/subscription.sh
+  - scripts/pre.sh
+{% endfor %}
