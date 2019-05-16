@@ -127,9 +127,10 @@ kcli plan ocp4-upi --stop
 
 Hacking DNS & DHCP config because of https://github.com/karmab/kcli/issues/140[KCLI Issue 140]
 
-`virsh net-edit ocp4-upi.bohne.io`
+   virsh net-edit ocp4-upi.bohne.io
 
-.Network XML -  ocp4-upi.bohne.io
+#### Network XML -  ocp4-upi.bohne.io
+
 [source,xml]
 ----
 <network>
