@@ -115,7 +115,7 @@ $ semanage port -l | grep http_port_t
 http_port_t                    tcp      1984, 6443, 80, 81, 443, 488, 8008, 8009, 8443, 9000
 
 $ semanage port -a -t http_port_t -p tcp 22623
----
+----
 
 ## Deployment
 
@@ -129,8 +129,7 @@ Hacking DNS & DHCP config because of https://github.com/karmab/kcli/issues/140[K
 
    virsh net-edit ocp4-upi.bohne.io
 
-#### Network XML -  ocp4-upi.bohne.io
-
+.Network XML -  ocp4-upi.bohne.io
 [source,xml]
 ----
 <network>
