@@ -1,0 +1,76 @@
+parameters:
+ pool: default
+ domain: ocp4-upi.bohne.io
+ template: ''
+ iso: /var/lib/libvirt/images/rhcos-410.8.20190509.3-installer.iso
+ controller: 3
+ worker: 3
+ reservedns: false
+ reserveip: true
+
+{{ domain }}:
+ type: network
+ cidr: 10.84.3.0/24
+ dhcp: True
+ nat: true
+
+bootstrap.{{ domain }}:
+ template: {{ template }}
+ iso: {{ iso }}
+ numcpus: 1
+ memory: 4096
+ reservedns: {{ reservedns }}
+ reserveip: {{ reserveip }}
+ sharedkey: false
+ cloudinit: false
+ nets:
+  - name: {{ domain }}
+    ip: 10.84.3.2
+    mask: 255.255.255.0
+    gateway: 10.84.3.1
+    dns: 10.84.3.1
+ disks:
+  - size: 40
+ pool: {{ pool }}
+
+{% for item in range(0, controller) %}
+controller-{{ item }}.{{ domain }}:
+ template: {{ template }}
+ iso: {{ iso }}
+ numcpus: 4
+ memory: 8192
+ reservedns: {{ reservedns }}
+ reserveip: {{ reserveip }}
+ sharedkey: false
+ cloudinit: false
+ nets:
+  - name: {{ domain }}
+    ip: 10.84.3.3{{ item }}
+    mask: 255.255.255.0
+    gateway: 10.84.3.1
+    dns: 10.84.3.1
+ disks:
+  - size: 40
+ pool: {{ pool }}
+{% endfor %}
+
+{% for item in range(0, worker) %}
+worker-{{ item }}.{{ domain }}:
+ template: {{ template }}
+ iso: {{ iso }}
+ numcpus: 4
+ memory: 8192
+ reservedns: {{ reservedns }}
+ reserveip: {{ reserveip }}
+ sharedkey: false
+ cloudinit: false
+ nets:
+  - name: {{ domain }}
+    ip: 10.84.3.4{{ item }}
+    mask: 255.255.255.0
+    gateway: 10.84.3.1
+    dns: 10.84.3.1
+ disks:
+  - size: 40
+ pool: {{ pool }}
+{% endfor %}
