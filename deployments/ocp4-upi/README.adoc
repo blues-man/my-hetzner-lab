@@ -211,3 +211,20 @@ virsh console worker-0.ocp4-upi.bohne.io
 Append:
 ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker.ign
 ----
+
+
+
+
+## Hackspace
+
+----
+
+
+cat master.ign | jq --slurpfile contect <(cat etc-hosts.json | sed 's/core1.example.com/controller-0/')  '.storage.files |= . + $contect'
+
+
+/etc/sysconfig/network-scripts/ifcfg-ens3 => $(jq -sRr @uri < bootstrap-ifcfg-ens3)
+/etc/resolv.conf => echo -e "search ucp4-upi.bohne.io\nnameserver 10.84.3.1" | jq -sRr @uri
+/etc/hostname => bootstrap.ucp4-upi.bohne.io
+
+----
