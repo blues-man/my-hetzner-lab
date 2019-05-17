@@ -5,8 +5,8 @@ parameters:
  iso: /var/lib/libvirt/images/rhcos-410.8.20190509.3-installer.iso
  controller: 3
  worker: 3
- reservedns: false
- reserveip: true
+ reservedns: true
+ reserveip: false
 
 {{ domain }}:
  type: network
@@ -22,7 +22,6 @@ bootstrap.{{ domain }}:
  reservedns: {{ reservedns }}
  reserveip: {{ reserveip }}
  sharedkey: false
- cloudinit: false
  nets:
   - name: {{ domain }}
     ip: 10.84.3.2
@@ -42,7 +41,6 @@ controller-{{ item }}.{{ domain }}:
  reservedns: {{ reservedns }}
  reserveip: {{ reserveip }}
  sharedkey: false
- cloudinit: false
  nets:
   - name: {{ domain }}
     ip: 10.84.3.3{{ item }}
@@ -63,7 +61,6 @@ worker-{{ item }}.{{ domain }}:
  reservedns: {{ reservedns }}
  reserveip: {{ reserveip }}
  sharedkey: false
- cloudinit: false
  nets:
   - name: {{ domain }}
     ip: 10.84.3.4{{ item }}
