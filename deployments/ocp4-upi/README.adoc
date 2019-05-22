@@ -199,18 +199,30 @@ kcli plan ocp4-upi --start
 virsh console bootstrap.ocp4-upi.bohne.io
 <TAB>
 Append:
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/bootstrap.ign
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/bootstrap-0.ign
 
 virsh console controller-0.ocp4-upi.bohne.io
 <TAB>
 Append:
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master.ign
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-0.ign
+
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-1.ign
+
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-2.ign
+
 
 virsh console worker-0.ocp4-upi.bohne.io
 <TAB>
 Append:
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker.ign
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-0.ign
+
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-1.ign
+
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-2.ign
+
+
 ----
+
 
 
 
@@ -218,13 +230,10 @@ ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.imag
 ## Hackspace
 
 ----
+# Static ip stuff
+# Don't use `--slurpfile` because of https://github.com/stedolan/jq/issues/1908
 
+cat bootstrap.ign | jq ".storage.files |= . + $(./static-ip.sh bootstrap.ocp4-upi.bohne.io 10.84.3.2)"  -c > /var/www/html/ocp4/bootstrap-static-ip.ign
 
-cat master.ign | jq --slurpfile contect <(cat etc-hosts.json | sed 's/core1.example.com/controller-0/')  '.storage.files |= . + $contect'
-
-
-/etc/sysconfig/network-scripts/ifcfg-ens3 => $(jq -sRr @uri < bootstrap-ifcfg-ens3)
-/etc/resolv.conf => echo -e "search ucp4-upi.bohne.io\nnameserver 10.84.3.1" | jq -sRr @uri
-/etc/hostname => bootstrap.ucp4-upi.bohne.io
 
 ----
