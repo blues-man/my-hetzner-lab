@@ -1,10 +1,25 @@
 # OpenShift 4 UPI installation on libvirt
+ifdef::env-github[]
+:imagesdir:
+ https://gist.githubusercontent.com/path/to/gist/revision/dir/with/all/images
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+ifndef::env-github[]
+:imagesdir: ./
+endif::[]
+:toc:
+:toc-placement!:
 
 CAUTION: This is a stupid bunch of informations for my self
 
-:toc:
+toc::[]
 
-## Informations:
+
+## Links to various documentations
 * https://libvirt.org/formatnetwork.html[Libvirt Network XML doc]
 * https://libvirt.org/formatdomain.html[Libvirt Domain XML doc]
 * https://docs.openshift.com/container-platform/4.1/installing/installing_bare_metal/installing-bare-metal.html[OpenShift 4.1 docs]
