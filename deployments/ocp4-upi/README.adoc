@@ -29,30 +29,15 @@ toc::[]
 * https://github.com/coreos/coreos-installer[Upstream Installer]
 * http://post-office.corp.redhat.com/archives/openshiftbeta/2019-May/msg00000.html[Red Hat Enterprise Linux CoreOS Eval Guide.pdf (Attachment)]
 
+## Known problems
 
-
-## PXE Example - not testet yet
-----
-
-[root@master Q-openstack]# cat ocp4-1.cfg 
-PROMPT 0
-TIMEOUT 100
-SERIAL 0 115200
-
-SAY ocp4-nvme kickstart install
-SAY .
-SAY DEFAULT is ocp4-http
-DEFAULT ocp4-http
-
-LABEL ocp4-http
-   SAY ocp4-http:  Boot to ocp4 method using http
-   KERNEL http://repo/repo/ocp4/rhcos-410.8.20190425.1-installer-kernel
-   APPEND ip=dhcp rd.neednet=1 initrd=http://repo/repo/ocp4/rhcos-410.8.20190425.1-installer-initramfs.img console=ttyS0,115200n8 inst.sshd=1 coreos.inst=yes coreos.inst.install_dev=nvme1n1 coreos.inst.image_url=http://repo/repo/ocp4/rhcos-410.8.20190425.1-metal-bios.raw coreos.inst.ignition_url=http://repo/repo/ocp4/boostrap.ign
-----
-
-Source: https://coreos.slack.com/archives/C999USB0D/p1556627876298900
+* Image registry has no storage
+** S3 works only on AWS or GCE 
 
 ## Enviroment
+
+image::my-env.png[My Env]
+
 ### DNS
 ----
 api-int.ocp4-upi.bohne.io	A	95.217.39.205
@@ -134,113 +119,115 @@ $ semanage port -a -t http_port_t -p tcp 22623
 
 ## Deployment
 
-----
-kcli plan -f kcli.yml ocp4-upi
-virsh net-dumpxml ocp4-upi.bohne.io > ocp4-upi.bohne.io.dhcp
-kcli plan ocp4-upi --stop
-----
+Prereq:
 
-Hacking DNS & DHCP config because of https://github.com/karmab/kcli/issues/140[KCLI Issue 140]
+ * Download installer, pullsecret, iso and bios from cloud.redhat.com
+ * Prepare Webserver for iso, bios and ignition
+ * Adjust domain in kcli.yml and install-config.yaml
 
-   virsh net-edit ocp4-upi.bohne.io
+.Deployment
 
-.Network XML -  ocp4-upi.bohne.io
-[source,xml]
-----
-<network>
-  <name>ocp4-upi.bohne.io</name>
-  <uuid>0b6e406c-1fce-41f1-8913-9fedbd1dbf13</uuid>
-  <metadata>
-    <kvirt:info xmlns:kvirt="kvirt">
-      <kvirt:plan>ocp4-upi</kvirt:plan>
-    </kvirt:info>
-  </metadata>
-  <forward mode='nat'>
-    <nat>
-      <port start='1024' end='65535'/>
-    </nat>
-  </forward>
-  <bridge name='virbr2' stp='on' delay='0'/>
-  <mac address='52:54:00:c1:fc:42'/>
-  <domain name='ocp4-upi.bohne.io'/>
-  <dns>
-    <host ip='10.84.3.42'>
-      <hostname>worker-2.ocp4-upi.bohne.io</hostname>
-    </host>
-    <host ip='10.84.3.41'>
-      <hostname>worker-1.ocp4-upi.bohne.io</hostname>
-    </host>
-    <host ip='10.84.3.40'>
-      <hostname>worker-0.ocp4-upi.bohne.io</hostname>
-    </host>
-    <host ip='10.84.3.32'>
-      <hostname>controller-2.ocp4-upi.bohne.io</hostname>
-    </host>
-    <host ip='10.84.3.31'>
-      <hostname>controller-1.ocp4-upi.bohne.io</hostname>
-    </host>
-    <host ip='10.84.3.30'>
-      <hostname>controller-0.ocp4-upi.bohne.io</hostname>
-    </host>
-    <host ip='10.84.3.2'>
-      <hostname>bootstrap.ocp4-upi.bohne.io</hostname>
-    </host>
-  </dns>
-    <ip address='10.84.3.1' netmask='255.255.255.0'>
-    <dhcp>
-      <range start='10.84.3.2' end='10.84.3.254'/>
-      <host mac='52:54:00:05:88:2e' name='worker-2.ocp4-upi.bohne.io' ip='10.84.3.42'/>
-      <host mac='52:54:00:e0:c1:32' name='worker-1.ocp4-upi.bohne.io' ip='10.84.3.41'/>
-      <host mac='52:54:00:32:f9:28' name='worker-0.ocp4-upi.bohne.io' ip='10.84.3.40'/>
-      <host mac='52:54:00:d1:91:49' name='controller-2.ocp4-upi.bohne.io' ip='10.84.3.32'/>
-      <host mac='52:54:00:cd:b3:de' name='controller-1.ocp4-upi.bohne.io' ip='10.84.3.31'/>
-      <host mac='52:54:00:9d:fd:c1' name='controller-0.ocp4-upi.bohne.io' ip='10.84.3.30'/>
-      <host mac='52:54:00:a2:a3:5d' name='bootstrap.ocp4-upi.bohne.io' ip='10.84.3.2'/>
-    </dhcp>
-  </ip>
-</network>
-----
+. Create install-config.yaml
 
+  mkdir installer-config/
+  cp install-config.yaml-without-secret installer-config/install-config.yaml
+  vi installer-config/install-config.yaml
 
-.Redeploy network
-----
-virsh net-destroy ocp4-upi.bohne.io
-virsh net-start ocp4-upi.bohne.io
-kcli plan ocp4-upi --start
-----
+. Create ignition config
 
-.Install all nodes:
-----
-virsh console bootstrap.ocp4-upi.bohne.io
-<TAB>
-Append:
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/bootstrap-0.ign
+  # openshift-install create ignition-configs  --log-level debug --dir=installer-config/
+  INFO Consuming "Install Config" from target directory
 
-virsh console controller-0.ocp4-upi.bohne.io
-<TAB>
-Append:
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-0.ign
+. Create igntion config for every host and add static ip adress
 
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-1.ign
+  # ./update-ign.sh
+  Write /var/www/html/ocp4/bootstrap-0.ign
+  Write /var/www/html/ocp4/master-[0:2].ign
+  Write /var/www/html/ocp4/worker-[0:2].ign
+  
+. Create virtual machines 
+  
+  kcli plan -f kcli.yml ocp4-upi
 
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-2.ign
+. Paste ignition config to every machine
+.. Bootstrap: 
 
+  virsh console bootstrap.ocp4-upi.bohne.io
+  <TAB><SPACE> Insert:
+  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/bootstrap-0.ign
 
-virsh console worker-0.ocp4-upi.bohne.io
-<TAB>
-Append:
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-0.ign
+.. Master 0-2
 
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-1.ign
+  virsh console controller-0.ocp4-upi.bohne.io
+  <TAB><SPACE> Insert:
+  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-0.ign
+  
+  virsh console controller-1.ocp4-upi.bohne.io
+  <TAB><SPACE> Insert:
+  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-1.ign
 
-ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-410.8.20190509.3-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-2.ign
+  virsh console controller-2.ocp4-upi.bohne.io
+  <TAB><SPACE> Insert:
+  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-2.ign
 
+.. Worker 0-2
 
-----
+  virsh console worker-0.ocp4-upi.bohne.io
+  <TAB><SPACE> Insert:
+  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-0.ign
+  
+  virsh console worker-1.ocp4-upi.bohne.io
+  <TAB><SPACE> Insert:
+  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-1.ign
 
+  virsh console worker-2.ocp4-upi.bohne.io
+  <TAB><SPACE> Insert:
+  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-2.ign
 
+. Wait for bootstrap complete
 
+  $ openshift-install wait-for bootstrap-complete --log-level=debug --dir=installer-config
+  DEBUG OpenShift Installer unreleased-master-980-g4efeb0c6777189e0f2571d82c12386780b14ef44
+  DEBUG Built from commit 4efeb0c6777189e0f2571d82c12386780b14ef44
+  INFO Waiting up to 30m0s for the Kubernetes API at https://api.ocp4-upi.bohne.io:6443...
+  DEBUG Still waiting for the Kubernetes API: Get https://api.ocp4-upi.bohne.io:6443/version?timeout=32s: EOF
+  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
+  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
+  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
+  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
+  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
+  DEBUG Still waiting for the Kubernetes API: Get https://api.ocp4-upi.bohne.io:6443/version?timeout=32s: EOF
+  INFO API v1.13.4+838b4fa up
+  INFO Waiting up to 30m0s for bootstrapping to complete...
+  DEBUG Bootstrap status: complete
+  INFO It is now safe to remove the bootstrap resources
 
+. Destroy bootstrap
+
+  # virsh destroy bootstrap.ocp4-upi.bohne.io
+
+. Wait for install complete
+
+  # openshift-install wait-for install-complete --log-level=debug --dir=installer-config
+  DEBUG OpenShift Installer unreleased-master-980-g4efeb0c6777189e0f2571d82c12386780b14ef44
+  DEBUG Built from commit 4efeb0c6777189e0f2571d82c12386780b14ef44
+  INFO Waiting up to 30m0s for the cluster at https://api.ocp4-upi.bohne.io:6443 to initialize...
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 96% complete
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 97% complete, waiting on authentication, image-registry, monitoring, openshift-samples
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 97% complete
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 97% complete
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 98% complete, waiting on image-registry, openshift-samples
+  DEBUG Still waiting for the cluster to initialize: Some cluster operators are still updating: image-registry, openshift-samples
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 98% complete
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 99% complete
+  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 100% complete, waiting on image-registry
+
+. Login into cluster
+
+  export KUBECONFIG=installer-config/auth/kubeconfig
+  oc get pods -A
+
+  open https://console-openshift-console.apps.ocp4-upi.bohne.io
 
 ## Hackspace
 
@@ -249,6 +236,32 @@ ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.imag
 # Don't use `--slurpfile` because of https://github.com/stedolan/jq/issues/1908
 
 cat bootstrap.ign | jq ".storage.files |= . + $(./static-ip.sh bootstrap.ocp4-upi.bohne.io 10.84.3.2)"  -c > /var/www/html/ocp4/bootstrap-static-ip.ign
+----
 
+
+
+
+
+## PXE Example - not testet yet
+
+Maybe PXE boot is an good solution to automate the ignition stuff
 
 ----
+
+[root@master Q-openstack]# cat ocp4-1.cfg 
+PROMPT 0
+TIMEOUT 100
+SERIAL 0 115200
+
+SAY ocp4-nvme kickstart install
+SAY .
+SAY DEFAULT is ocp4-http
+DEFAULT ocp4-http
+
+LABEL ocp4-http
+   SAY ocp4-http:  Boot to ocp4 method using http
+   KERNEL http://repo/repo/ocp4/rhcos-410.8.20190425.1-installer-kernel
+   APPEND ip=dhcp rd.neednet=1 initrd=http://repo/repo/ocp4/rhcos-410.8.20190425.1-installer-initramfs.img console=ttyS0,115200n8 inst.sshd=1 coreos.inst=yes coreos.inst.install_dev=nvme1n1 coreos.inst.image_url=http://repo/repo/ocp4/rhcos-410.8.20190425.1-metal-bios.raw coreos.inst.ignition_url=http://repo/repo/ocp4/boostrap.ign
+----
+
+Source: https://coreos.slack.com/archives/C999USB0D/p1556627876298900
