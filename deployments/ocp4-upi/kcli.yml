@@ -2,7 +2,7 @@ parameters:
  pool: default
  domain: ocp4-upi.bohne.io
  template: ''
- iso: /var/lib/libvirt/images/rhcos-410.8.20190509.3-installer.iso
+ iso: /var/lib/libvirt/images/rhcos-4.1.0-x86_64-installer.iso
  controller: 3
  worker: 3
  reservedns: true
