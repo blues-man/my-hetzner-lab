@@ -113,9 +113,18 @@ backend ocp4-upi-80
 ----
 $ semanage port -l | grep http_port_t
 http_port_t                    tcp      1984, 6443, 80, 81, 443, 488, 8008, 8009, 8443, 9000
-
 $ semanage port -a -t http_port_t -p tcp 22623
 ----
+
+### Create letsencrypt certificates
+
+    export CLOUDFLARE_ACCOUNT_EMAIL=sadf@example.com
+    export CLOUDFLARE_ACCOUNT_API_TOKEN=asdf
+    export CLOUDFLARE_ZONE="exmaple.com"
+
+    ./00_letsencrypt_with_cloudflare.yml -e public_hostname=ocp4-upi.bohne.io
+
+
 
 ## Deployment
 
@@ -228,6 +237,15 @@ Prereq:
   oc get pods -A
 
   open https://console-openshift-console.apps.ocp4-upi.bohne.io
+
+. *Optional* Deployn letsencrypt certificates
++
+    oc create secret tls router-certs --cert=certificates/ocp4-upi.bohne.io/fullchain.crt --key=certificates/ocp4-upi.bohne.io/cert.key -n openshift-ingress
+
+    oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec": { "defaultCertificate": { "name": "router-certs" }}}'
+
++
+https://blog.openshift.com/requesting-and-installing-lets-encrypt-certificates-for-openshift-4/[Source]
 
 ## Hackspace
 

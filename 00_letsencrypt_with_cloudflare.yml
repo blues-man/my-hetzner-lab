@@ -6,6 +6,8 @@
   vars:
     cloudflare_account_email: "{{ lookup('env','CLOUDFLARE_ACCOUNT_EMAIL') }}"
     cloudflare_account_api_token: "{{ lookup('env','CLOUDFLARE_ACCOUNT_API_TOKEN') }}"
+    cloudflare_zone: "{{ lookup('env','CLOUDFLARE_ZONE') }}"
+    
 
   tasks:
   - name: Check CloudFlare
@@ -39,7 +41,7 @@
   - openssl_csr:
       path: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.csr"
       privatekey_path: "{{ playbook_dir }}/certificates/{{ public_hostname }}/cert.key"
-      subject_alt_name: "DNS:*.{{ public_hostname }},DNS:{{ public_hostname }},DNS:api-{{public_hostname}}"
+      subject_alt_name: "DNS:*.apps.{{ public_hostname }},DNS:api.{{ public_hostname }}"
 
   - name: Create a challenge for {{ public_hostname }} using a account key file.
     acme_certificate:
@@ -64,7 +66,7 @@
 
   - name: Create DNS record
     cloudflare_dns:
-      zone: bohne.io
+      zone: "{{ cloudflare_zone }}"
       record: "{{ item.0.key }}"
       ttl: 120
       type: TXT
@@ -103,7 +105,7 @@
   
   - name: Delete DNS record
     cloudflare_dns:
-      zone: bohne.io
+      zone: "{{ cloudflare_zone }}"
       record: "{{ item.0.key }}"
       ttl: 120
       type: TXT
