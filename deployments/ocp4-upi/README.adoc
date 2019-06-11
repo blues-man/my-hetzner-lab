@@ -247,6 +247,10 @@ Prereq:
 +
 https://blog.openshift.com/requesting-and-installing-lets-encrypt-certificates-for-openshift-4/[Source]
 
+. *Optional* Set emptyDir as registry storage
++
+    oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"emptyDir":{}}}}'
+
 ## Hackspace
 
 ----
