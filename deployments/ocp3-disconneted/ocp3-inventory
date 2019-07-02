@@ -1,0 +1,156 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+{% if glusterfs %}
+glusterfs
+{% endif %}
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+openshift_deployment_type=openshift-enterprise
+openshift_hosted_modify_imagestreams=true
+openshift_master_default_subdomain=ocp3.bohne.io
+openshift_master_cluster_hostname=api-ocp3.bohne.io
+openshift_master_cluster_public_hostname=api-ocp3.bohne.io
+openshift_master_api_port=443
+openshift_master_console_port=443
+
+openshift_use_openshift_sdn=true
+
+# Configure the multi-tenant SDN plugin (default is 'redhat/openshift-ovs-subnet')
+os_sdn_network_plugin_name=redhat/openshift-ovs-multitenant
+
+# Provide local certificate paths which will be deployed to masters
+openshift_master_overwrite_named_certificates=true
+
+openshift_master_named_certificates=[{"certfile": "/root/certificates/cert.crt", "keyfile": "/root/certificates/cert.key", "cafile": "/root/certificates/ca-bundle.pem"}]
+openshift_hosted_router_certificate={"certfile": "/root/certificates/cert.crt", "keyfile": "/root/certificates/cert.key", "cafile": "/root/certificates/ca-bundle.pem"}
+
+
+# ToDo lets encrypt ceritifcates
+
+container_runtime_docker_storage_type=overlay2
+container_runtime_docker_storage_setup_device=/dev/{{ container_disk }}
+
+openshift_use_crio = {{ crio }}
+openshift_use_crio_only = {{ crio }}
+
+openshift_install_examples=true
+# Ah test
+openshift_examples_load_xpaa=true 
+
+ansible_ssh_user=cloud-user
+ansible_become=True
+oreg_url={{ registry}}/openshift3/ose-${component}:v{{ version }}
+oreg_auth_user="{{ rh_oreg_auth_user }}"
+oreg_auth_password="{{ rh_oreg_auth_password }}"
+
+# Openshift Registry Options
+openshift_hosted_registry_storage_kind=glusterfs
+openshift_hosted_registry_replicas=1
+
+openshift_release=v{{ version }}
+openshift_portal_net=172.30.0.0/16
+openshift_disable_check=disk_availability,memory_availability,docker_image_availability
+
+{% if crio %}
+openshift_node_groups=[{'name': 'master', 'labels': ['node-role.kubernetes.io/master=true', 'node-role.kubernetes.io/compute=true', 'runtime=cri-o'],'edits': [{ 'key': 'kubeletArguments.container-runtime','value': ['remote']}, { 'key': 'kubeletArguments.container-runtime-endpoint','value': ['/var/run/crio/crio.sock']}, { 'key': 'kubeletArguments.image-service-endpoint','value': ['/var/run/crio/crio.sock']}, { 'key': 'kubeletArguments.runtime-request-timeout','value': ['10m']}]}, {'name': 'infra', 'labels': ['node-role.kubernetes.io/infra=true', 'node-role.kubernetes.io/compute=true', 'runtime=cri-o'],'edits': [{ 'key': 'kubeletArguments.container-runtime','value': ['remote']}, { 'key': 'kubeletArguments.container-runtime-endpoint','value': ['/var/run/crio/crio.sock']}, { 'key': 'kubeletArguments.image-service-endpoint','value': ['/var/run/crio/crio.sock']}, { 'key': 'kubeletArguments.runtime-request-timeout','value': ['10m']}]}, {'name': 'compute', 'labels': ['node-role.kubernetes.io/compute=true', 'runtime=cri-o'],'edits': [{ 'key': 'kubeletArguments.container-runtime','value': ['remote']}, { 'key': 'kubeletArguments.container-runtime-endpoint','value': ['/var/run/crio/crio.sock']}, { 'key': 'kubeletArguments.image-service-endpoint','value': ['/var/run/crio/crio.sock']}, { 'key': 'kubeletArguments.runtime-request-timeout','value': ['10m']}]}]
+{% endif %}
+
+openshift_disable_check=disk_availability,memory_availability,docker_image_availability
+
+{% if infras > 0 -%} 
+openshift_router_selector="node-role.kubernetes.io/infra=true"
+openshift_registry_selector="node-role.kubernetes.io/infra=true"
+{% else %}
+openshift_router_selector="node-role.kubernetes.io/master=true"
+openshift_registry_selector="node-role.kubernetes.io/master=true"
+{%- endif %}
+
+openshift_master_identity_providers=[{'name': 'allow_all', 'login': 'true', 'challenge': 'true', 'kind': 'AllowAllPasswordIdentityProvider'}]
+
+{% if glusterfs -%}
+openshift_storage_glusterfs_namespace=ocs
+openshift_storage_glusterfs_name=ocs
+openshift_storage_glusterfs_wipe=True
+openshift_storage_glusterfs_storageclass=true
+openshift_storage_glusterfs_storageclass_default=true
+
+openshift_storage_glusterfs_block_deploy=True
+openshift_storage_glusterfs_block_host_vol_create=true
+openshift_storage_glusterfs_block_host_vol_size=50
+openshift_storage_glusterfs_block_storageclass=true
+
+# Fix for: https://access.redhat.com/solutions/3949971
+openshift_storage_glusterfs_image=registry.redhat.io/rhgs3/rhgs-server-rhel7:v3.11
+openshift_storage_glusterfs_block_image=registry.redhat.io/rhgs3/rhgs-gluster-block-prov-rhel7:v3.11
+openshift_storage_glusterfs_heketi_image=registry.redhat.io/rhgs3/rhgs-volmanager-rhel7:v3.11
+
+{%- endif %}
+
+# Operator Lifecycle Manager
+openshift_enable_olm=true
+
+# Prometheus
+openshift_cluster_monitoring_operator_install=true
+openshift_cluster_monitoring_operator_prometheus_storage_enabled=true
+openshift_cluster_monitoring_operator_alertmanager_storage_enabled=true
+openshift_cluster_monitoring_operator_prometheus_storage_capacity=5Gi
+openshift_cluster_monitoring_operator_node_selector={"node-role.kubernetes.io/infra":"true"}
+
+{% if metrics -%}
+# metrics
+openshift_metrics_install_metrics=true
+openshift_metrics_cassanda_pvc_storage_class_name=glusterfs-storage
+#openshift_metrics_storage_access_modes=['ReadWriteOnce']
+openshift_metrics_storage_volume_name=metrics
+openshift_metrics_storage_volume_size=10Gi
+openshift_metrics_storage_kind=dynamic
+{%- endif %}
+
+{% if asb -%}
+ansible_service_broker_local_registry_whitelist=['.*-apb$']
+ansible_service_broker_registry_tag=latest
+{%- endif %}
+
+# host group for masters
+[masters]
+{% for master in range(0, masters) -%}
+{{prefix}}-m0{{ master +1 }}.{{ domain }} ansible_connection=local openshift_node_group_name="master"
+{%- endfor %}
+
+# host group for etcd
+[etcd]
+{% for master in range(0, masters) -%}
+{{prefix}}-m0{{ master +1 }}.{{ domain }} ansible_connection=local
+{%- endfor %}
+
+{% if glusterfs %}
+[glusterfs]
+{% if infras == 2 %}
+{{prefix}}-m01.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{{prefix}}-i01.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{{prefix}}-i02.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{% elif infras > 2 %}
+{{prefix}}-i01.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{{prefix}}-i02.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{{prefix}}-i03.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{% else %}
+{{prefix}}-m01.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{{prefix}}-i01.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{{prefix}}-n01.{{ domain }} glusterfs_devices='[ "/dev/{{ glusterfs_disk }}" ]'
+{% endif %}
+{% endif %}
+
+# host group for nodes, includes region info
+[nodes]
+{% for master in range(0, masters) %}
+{{prefix}}-m0{{ master +1 }}.{{ domain }} openshift_node_group_name="master" ansible_connection=local
+{% endfor %}
+{% for node in range(0, nodes) %}
+{{prefix}}-n0{{ node +1 }}.{{ domain }} openshift_node_group_name="compute"
+{% endfor %}
+{% for infra in range(0, infras) %}
+{{prefix}}-i0{{ infra +1 }}.{{ domain }} openshift_node_group_name="infra"
+{% endfor %}
