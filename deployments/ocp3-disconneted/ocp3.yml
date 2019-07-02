@@ -1,3 +1,9 @@
+#
+# Fetch disconnected data: https://github.com/rbo/openshift-examples/tree/master/disconnected
+# Create ISO from ocp-3.11-data.tar
+#    genisoimage -allow-limited-size -o ocp-3.11-data.iso ocp-3.11-data.tar
+#
+
 parameters:
  rh_oreg_auth_user:
  rh_oreg_auth_password: 
@@ -29,16 +35,49 @@ parameters:
 {{ prefix }}:
  type: network
  cidr: 10.99.3.0/24
- dhcp: True
- nat: true
+ dhcp: false
+ nat: false
 
+bastion:
+  template: {{ template }}
+  numcpus: 2
+  memory: 4096
+  rhnregister: false
+  reservedns: true
+  sharedkey: true
+  domain: {{ domain }}
+  nets:
+    - name: {{ prefix }}
+      ip: 10.99.3.3
+      mask: 255.255.255.0
+      gateway: 10.99.3.1
+      dns: 10.99.3.1
+  disks:
+    - size: 120
+  iso: ocp-3.11-data.iso
+  files:
+    - path: /etc/yum.repos.d/ocp3.repo
+      origin: files/james-ocp3.repo
+    - path: /root/inventory
+      origin: {{ prefix }}-inventory
+    - path: /root/ca-bundle.pem
+      origin: certificates/ca-bundle.pem
+    - path: /root/cert.crt
+      origin: certificates/cert.crt
+    - path: /root/cert.key
+      origin: certificates/cert.key
+    - path: /root/install_openshift.sh
+      origin: scripts/install_openshift.sh
+  scripts:
+    - scripts/bastion.sh
+    - scripts/install.sh
 
 {% for master in range(0, masters) %}
 {{ prefix }}-m0{{ master + 1 }}:
  template: {{ template }}
  numcpus: 2
  memory: {{ master_memory }}
- rhnregister: true
+ rhnregister: false
  reservedns: true
  sharedkey: true
  domain: {{ domain }}
@@ -53,29 +92,8 @@ parameters:
   - size: {{ container_disk_size }}
   - size: {{ glusterfs_disk_size }}
  pool: {{ pool }}
- files:
-  - path: /root/inventory
-    origin: {{ prefix }}-inventory
-  - path: /root/ca-bundle.pem
-    origin: certificates/ca-bundle.pem
-  - path: /root/cert.crt
-    origin: certificates/cert.crt
-  - path: /root/cert.key
-    origin: certificates/cert.key
-{% if type == 'ovirt' %}
-  - path: /root/ovirt_fix_inventory.sh
-    origin: scripts/ovirt_fix_inventory.sh
-{% endif %}
-  - path: /root/install_openshift.sh
-    origin: scripts/install_openshift.sh
  scripts: 
-  - scripts/subscription.sh
   - scripts/pre.sh
-{% if deploy and master == 0 %}
-  - scripts/install.sh
- notify: true
- notifycmd: {{ notifycmd }}
-{% endif %}
 {% endfor %}
 
 {% for node in range(0, nodes) %}
@@ -83,7 +101,7 @@ parameters:
  template: {{ template }}
  numcpus: 2
  memory: {{ node_memory }}
- rhnregister: true
+ rhnregister: false
  reservedns: true
  sharedkey: true
  domain: {{ domain }}
@@ -99,7 +117,6 @@ parameters:
   - size: {{ glusterfs_disk_size }}
  pool: {{ pool }}
  scripts: 
-  - scripts/subscription.sh
   - scripts/pre.sh
 {% endfor %}
 
@@ -108,7 +125,7 @@ parameters:
  template: {{ template }}
  numcpus: 2
  memory: {{ infra_memory }}
- rhnregister: true
+ rhnregister: false
  reservedns: true
  sharedkey: true
  domain: {{ domain }}
@@ -124,6 +141,5 @@ parameters:
   - size: {{ glusterfs_disk_size }}
  pool: {{ pool }}
  scripts: 
-  - scripts/subscription.sh
   - scripts/pre.sh
 {% endfor %}

@@ -24,8 +24,8 @@ os_sdn_network_plugin_name=redhat/openshift-ovs-multitenant
 # Provide local certificate paths which will be deployed to masters
 openshift_master_overwrite_named_certificates=true
 
-openshift_master_named_certificates=[{"certfile": "/root/certificates/cert.crt", "keyfile": "/root/certificates/cert.key", "cafile": "/root/certificates/ca-bundle.pem"}]
-openshift_hosted_router_certificate={"certfile": "/root/certificates/cert.crt", "keyfile": "/root/certificates/cert.key", "cafile": "/root/certificates/ca-bundle.pem"}
+openshift_master_named_certificates=[{"certfile": "/root/cert.crt", "keyfile": "/root/cert.key", "cafile": "/root/ca-bundle.pem"}]
+openshift_hosted_router_certificate={"certfile": "/root/cert.crt", "keyfile": "/root/cert.key", "cafile": "/root/ca-bundle.pem"}
 
 
 # ToDo lets encrypt ceritifcates
@@ -42,9 +42,38 @@ openshift_examples_load_xpaa=true
 
 ansible_ssh_user=cloud-user
 ansible_become=True
-oreg_url={{ registry}}/openshift3/ose-${component}:v{{ version }}
-oreg_auth_user="{{ rh_oreg_auth_user }}"
-oreg_auth_password="{{ rh_oreg_auth_password }}"
+
+# --- Important part for disconnected ----
+
+# Cluster Image Source (registry) configuration
+# openshift-enterprise default is 'registry.redhat.io/openshift3/ose-${component}:${version}'
+# origin default is 'docker.io/openshift/origin-${component}:${version}'
+oreg_url=bastion.{{ domain }}:5000/openshift3/ose-${component}:${version}
+# If oreg_url points to a registry other than registry.redhat.io we can
+# modify image streams to point at that registry by setting the following to true
+openshift_examples_modify_imagestreams=true
+# Add insecure and blocked registries to global docker configuration
+openshift_docker_insecure_registries=['bastion.{{ domain }}:5000']
+openshift_docker_blocked_registries=['registry.access.redhat.com', 'docker.io', 'registry.fedoraproject.org', 'quay.io', 'registry.centos.org']
+# You may also configure additional default registries for docker, however this
+# is discouraged. Instead you should make use of fully qualified image names.
+openshift_docker_additional_registries=['bastion.{{ domain }}:5000']
+
+# OpenShift repository configuration
+openshift_additional_repos=[{'id': 'rhel-7-server-rpms', 'name': 'rhel-7-server-rpms', 'baseurl': 'http://bastion.{{ domain }}/repos/rhel-7-server-rpms', 'enabled': 1, 'gpgcheck': 0},{'id': 'rhel-7-server-extras-rpms', 'name': 'rhel-7-server-extras-rpms', 'baseurl': 'http://bastion.{{ domain }}/repos/rhel-7-server-extras-rpms', 'enabled': 1, 'gpgcheck': 0},{'id': 'rhel-7-server-ansible-2.6-rpms', 'name': 'rhel-7-server-ansible-2.6-rpms', 'baseurl': 'http://bastion.{{ domain }}/repos/rhel-7-server-ansible-2.6-rpms', 'enabled': 1, 'gpgcheck': 0},{'id': 'rhel-7-server-ose-3.11-rpms', 'name': 'rhel-7-server-ose-3.11-rpms', 'baseurl': 'http://bastion.{{ domain }}/repos/rhel-7-server-ose-3.11-rpms', 'enabled': 1, 'gpgcheck': 0}]
+
+# Important: docker_image_availability, maybe the skopoe check did not work with your repo
+openshift_disable_check=disk_availability,memory_availability,docker_image_availability
+
+
+# Don't work very well, becaude ose-pod-v3.11.69 is hardcoded
+#openshift_image_tag=v3.11
+
+# Arg, hardcoded registry.redhat.io/....
+#    https://github.com/openshift/openshift-ansible/blob/master/roles/etcd/defaults/main.yaml#L15
+osm_etcd_image=bastion.{{ domain }}:5000/rhel7/etcd:3.2.22
+
+# --- End important part for disconnected ----
 
 # Openshift Registry Options
 openshift_hosted_registry_storage_kind=glusterfs
@@ -117,13 +146,13 @@ ansible_service_broker_registry_tag=latest
 # host group for masters
 [masters]
 {% for master in range(0, masters) -%}
-{{prefix}}-m0{{ master +1 }}.{{ domain }} ansible_connection=local openshift_node_group_name="master"
+{{prefix}}-m0{{ master +1 }}.{{ domain }} openshift_node_group_name="node-config-master"
 {%- endfor %}
 
 # host group for etcd
 [etcd]
 {% for master in range(0, masters) -%}
-{{prefix}}-m0{{ master +1 }}.{{ domain }} ansible_connection=local
+{{prefix}}-m0{{ master +1 }}.{{ domain }}
 {%- endfor %}
 
 {% if glusterfs %}
@@ -146,11 +175,11 @@ ansible_service_broker_registry_tag=latest
 # host group for nodes, includes region info
 [nodes]
 {% for master in range(0, masters) %}
-{{prefix}}-m0{{ master +1 }}.{{ domain }} openshift_node_group_name="master" ansible_connection=local
+{{prefix}}-m0{{ master +1 }}.{{ domain }} openshift_node_group_name="node-config-master"
 {% endfor %}
 {% for node in range(0, nodes) %}
-{{prefix}}-n0{{ node +1 }}.{{ domain }} openshift_node_group_name="compute"
+{{prefix}}-n0{{ node +1 }}.{{ domain }} openshift_node_group_name="node-config-compute"
 {% endfor %}
 {% for infra in range(0, infras) %}
-{{prefix}}-i0{{ infra +1 }}.{{ domain }} openshift_node_group_name="infra"
+{{prefix}}-i0{{ infra +1 }}.{{ domain }} openshift_node_group_name="node-config-infra"
 {% endfor %}
