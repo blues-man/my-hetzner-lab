@@ -3,7 +3,11 @@
 # Create ISO from ocp-3.11-data.tar
 #    genisoimage -allow-limited-size -o ocp-3.11-data.iso ocp-3.11-data.tar
 #
-
+# Disable internet access
+#   iptables -S FORWARD | grep 10.99.3.0
+#   iptables -D FORWARD -d 10.99.3.0/24 -o virbr1 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+#   iptables -D FORWARD -s 10.99.3.0/24 -i virbr1 -j ACCEPT
+#
 parameters:
  rh_oreg_auth_user:
  rh_oreg_auth_password: 
@@ -35,8 +39,8 @@ parameters:
 {{ prefix }}:
  type: network
  cidr: 10.99.3.0/24
- dhcp: false
- nat: false
+ dhcp: true
+ nat: true
 
 bastion:
   template: {{ template }}
