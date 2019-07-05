@@ -7,17 +7,17 @@
     cloudflare_account_email: "{{ lookup('env','CLOUDFLARE_ACCOUNT_EMAIL') }}"
     cloudflare_account_api_token: "{{ lookup('env','CLOUDFLARE_ACCOUNT_API_TOKEN') }}"
     cloudflare_zone: "{{ lookup('env','CLOUDFLARE_ZONE') }}"
-    
-
+  
   tasks:
   - name: Check CloudFlare
     assert:
       that:
-        - item is defined
+        - lookup('vars',item) is defined
       msg: "{{ item }} is not defined!"
     with_items:
       - cloudflare_account_email
       - cloudflare_account_api_token
+      - cloudflare_zone
 
   - name: Create certificates dir
     file:
