@@ -61,7 +61,7 @@ bastion:
   iso: ocp-3.11-data.iso
   files:
     - path: /etc/yum.repos.d/ocp3.repo
-      origin: files/james-ocp3.repo
+      origin: files/bastion-ocp3.repo
     - path: /root/inventory
       origin: {{ prefix }}-inventory
     - path: /root/ca-bundle.pem
