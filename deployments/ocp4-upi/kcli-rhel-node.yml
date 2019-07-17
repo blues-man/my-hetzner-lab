@@ -1,0 +1,49 @@
+parameters:
+ pool: default
+ domain: ocp4-upi.bohne.io
+ template: 'rhel-server-7.6-x86_64-kvm.qcow2'
+ rhelworker: 1
+ reservedns: true
+ reserveip: false
+
+{{ domain }}:
+ type: network
+ cidr: 10.84.3.0/24
+ dhcp: True
+ nat: true
+
+rhel-bastion.{{ domain }}:
+ template: {{ template }}
+ numcpus: 1
+ memory: 4096
+ reservedns: {{ reservedns }}
+ reserveip: {{ reserveip }}
+ sharedkey: false
+ nets:
+  - name: {{ domain }}
+    ip: 10.84.3.5
+    mask: 255.255.255.0
+    gateway: 10.84.3.1
+    dns: 10.84.3.1
+ disks:
+  - size: 20
+ pool: {{ pool }}
+
+{% for item in range(0, rhelworker) %}
+rhel-worker-{{ item }}.{{ domain }}:
+ template: {{ template }}
+ numcpus: 4
+ memory: 8192
+ reservedns: {{ reservedns }}
+ reserveip: {{ reserveip }}
+ sharedkey: false
+ nets:
+  - name: {{ domain }}
+    ip: 10.84.3.5{{ item }}
+    mask: 255.255.255.0
+    gateway: 10.84.3.1
+    dns: 10.84.3.1
+ disks:
+  - size: 40
+ pool: {{ pool }}
+{% endfor %}

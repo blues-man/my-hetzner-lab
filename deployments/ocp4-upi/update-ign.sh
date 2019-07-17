@@ -14,3 +14,4 @@ echo "Write ${DEST_DIR}worker-[0:2].ign"
 cat ${SRC_DIR}worker.ign | jq ".storage.files |= . + $(./static-ip.sh worker-0.ocp4-upi.bohne.io 10.84.3.40)"  -c > ${DEST_DIR}worker-0.ign
 cat ${SRC_DIR}worker.ign | jq ".storage.files |= . + $(./static-ip.sh worker-1.ocp4-upi.bohne.io 10.84.3.41)"  -c > ${DEST_DIR}worker-1.ign
 cat ${SRC_DIR}worker.ign | jq ".storage.files |= . + $(./static-ip.sh worker-2.ocp4-upi.bohne.io 10.84.3.42)"  -c > ${DEST_DIR}worker-2.ign
+cat ${SRC_DIR}worker.ign | jq ".storage.files |= . + $(./static-ip.sh worker-3.ocp4-upi.bohne.io 10.84.3.43)"  -c > ${DEST_DIR}worker-3.ign
