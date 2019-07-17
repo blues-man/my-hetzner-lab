@@ -137,108 +137,95 @@ Prereq:
 .Deployment
 
 . Create install-config.yaml
++
+[source]
+mkdir installer-config/
+cp install-config.yaml-without-secret installer-config/install-config.yaml
+vi installer-config/install-config.yaml
 
-  mkdir installer-config/
-  cp install-config.yaml-without-secret installer-config/install-config.yaml
-  vi installer-config/install-config.yaml
+. *Optional* Add your own cluster configuration (auth, certificates..)
++
+[source]
+openshift-install create manifests  --log-level debug --dir=installer-config/
+cp -v 99_openshift-rbo-configurator* installer-config/openshift/
 
 . Create ignition config
-
-  # openshift-install create ignition-configs  --log-level debug --dir=installer-config/
-  INFO Consuming "Install Config" from target directory
++
+[source]
+openshift-install create ignition-configs  --log-level debug --dir=installer-config/
 
 . Create igntion config for every host and add static ip adress
-
-  # ./update-ign.sh
-  Write /var/www/html/ocp4/bootstrap-0.ign
-  Write /var/www/html/ocp4/master-[0:2].ign
-  Write /var/www/html/ocp4/worker-[0:2].ign
++
+[source]
+./update-ign.sh
   
 . Create virtual machines 
-  
-  kcli plan -f kcli.yml ocp4-upi
++
+[source]
+kcli plan -f kcli.yml ocp4-upi
 
 . Paste ignition config to every machine
 .. Bootstrap: 
-
-  virsh console bootstrap.ocp4-upi.bohne.io
-  <TAB><SPACE> Insert:
-  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/bootstrap-0.ign
++
+[source]
+virsh console bootstrap.ocp4-upi.bohne.io
+<TAB><SPACE> Insert:
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz coreos.inst.ignition_url=http://ds.bohne.io/ocp4/bootstrap-0.ign
 
 .. Master 0-2
++
+[source]
+virsh console controller-0.ocp4-upi.bohne.io
+<TAB><SPACE> Insert:
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-0.ign
 
-  virsh console controller-0.ocp4-upi.bohne.io
-  <TAB><SPACE> Insert:
-  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-0.ign
-  
-  virsh console controller-1.ocp4-upi.bohne.io
-  <TAB><SPACE> Insert:
-  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-1.ign
+virsh console controller-1.ocp4-upi.bohne.io
+<TAB><SPACE> Insert:
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-1.ign
 
-  virsh console controller-2.ocp4-upi.bohne.io
-  <TAB><SPACE> Insert:
-  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-2.ign
+virsh console controller-2.ocp4-upi.bohne.io
+<TAB><SPACE> Insert:
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/master-2.ign
 
 .. Worker 0-2
++
+[source]
+virsh console worker-0.ocp4-upi.bohne.io
+<TAB><SPACE> Insert:
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-0.ign
 
-  virsh console worker-0.ocp4-upi.bohne.io
-  <TAB><SPACE> Insert:
-  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-0.ign
-  
-  virsh console worker-1.ocp4-upi.bohne.io
-  <TAB><SPACE> Insert:
-  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-1.ign
+virsh console worker-1.ocp4-upi.bohne.io
+<TAB><SPACE> Insert:
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-1.ign
 
-  virsh console worker-2.ocp4-upi.bohne.io
-  <TAB><SPACE> Insert:
-  ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-2.ign
+virsh console worker-2.ocp4-upi.bohne.io
+<TAB><SPACE> Insert:
+ip=dhcp console=tty0 console=ttyS0 coreos.inst.install_dev=vda  coreos.inst.image_url=http://ds.bohne.io/ocp4/rhcos-4.1.0-x86_64-metal-bios.raw.gz  coreos.inst.ignition_url=http://ds.bohne.io/ocp4/worker-2.ign
 
 . Wait for bootstrap complete
-
-  $ openshift-install wait-for bootstrap-complete --log-level=debug --dir=installer-config
-  DEBUG OpenShift Installer unreleased-master-980-g4efeb0c6777189e0f2571d82c12386780b14ef44
-  DEBUG Built from commit 4efeb0c6777189e0f2571d82c12386780b14ef44
-  INFO Waiting up to 30m0s for the Kubernetes API at https://api.ocp4-upi.bohne.io:6443...
-  DEBUG Still waiting for the Kubernetes API: Get https://api.ocp4-upi.bohne.io:6443/version?timeout=32s: EOF
-  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
-  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
-  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
-  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
-  DEBUG Still waiting for the Kubernetes API: the server could not find the requested resource
-  DEBUG Still waiting for the Kubernetes API: Get https://api.ocp4-upi.bohne.io:6443/version?timeout=32s: EOF
-  INFO API v1.13.4+838b4fa up
-  INFO Waiting up to 30m0s for bootstrapping to complete...
-  DEBUG Bootstrap status: complete
-  INFO It is now safe to remove the bootstrap resources
++
+[source]
+openshift-install wait-for bootstrap-complete --log-level=debug --dir=installer-config
 
 . Destroy bootstrap
-
-  # virsh destroy bootstrap.ocp4-upi.bohne.io
++
+[source]
+virsh destroy bootstrap.ocp4-upi.bohne.io
 
 . Wait for install complete
-
-  # openshift-install wait-for install-complete --log-level=debug --dir=installer-config
-  DEBUG OpenShift Installer unreleased-master-980-g4efeb0c6777189e0f2571d82c12386780b14ef44
-  DEBUG Built from commit 4efeb0c6777189e0f2571d82c12386780b14ef44
-  INFO Waiting up to 30m0s for the cluster at https://api.ocp4-upi.bohne.io:6443 to initialize...
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 96% complete
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 97% complete, waiting on authentication, image-registry, monitoring, openshift-samples
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 97% complete
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 97% complete
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 98% complete, waiting on image-registry, openshift-samples
-  DEBUG Still waiting for the cluster to initialize: Some cluster operators are still updating: image-registry, openshift-samples
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 98% complete
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 99% complete
-  DEBUG Still waiting for the cluster to initialize: Working towards 4.1.0: 100% complete, waiting on image-registry
++
+[source]
+openshift-install wait-for install-complete --log-level=debug --dir=installer-config
 
 . Login into cluster
-
-  export KUBECONFIG=installer-config/auth/kubeconfig
-  oc get pods -A
++
+[source]
+export KUBECONFIG=installer-config/auth/kubeconfig
+oc get pods -A
 
   open https://console-openshift-console.apps.ocp4-upi.bohne.io
 
-. *Optional* Deployn letsencrypt certificates
+. *Optional* Deployn letsencrypt certificates - 
 +
     oc create secret tls router-certs --cert=certificates/ocp4-upi.bohne.io/fullchain.crt --key=certificates/ocp4-upi.bohne.io/cert.key -n openshift-ingress
 
@@ -247,9 +234,10 @@ Prereq:
 +
 https://blog.openshift.com/requesting-and-installing-lets-encrypt-certificates-for-openshift-4/[Source]
 
-. *Optional* Set emptyDir as registry storage
+. Setup emptyDir as registry storage
 +
-    oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"emptyDir":{}}}}'
+[source]
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"emptyDir":{}}}}'
 
 ## Hackspace
 
