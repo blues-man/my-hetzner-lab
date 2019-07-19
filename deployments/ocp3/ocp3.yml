@@ -1,6 +1,7 @@
 parameters:
- rh_oreg_auth_user:
- rh_oreg_auth_password: 
+ #rh_oreg added in ~/.kcli/config.yml
+ #rh_oreg_auth_user:
+ #rh_oreg_auth_password: 
  prefix: ocp3
  template: rhel-server-7.6-x86_64-kvm.qcow2
  base_disk_size: 60
